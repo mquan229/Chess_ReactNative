@@ -3,8 +3,33 @@
 # Learn more about .gitignore:
 #     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
 
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+xcshareddata
+.gradle
+local.properties
+*.iml
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
 # Node artifact files
 node_modules/
+build/
 dist/
 
 # Compiled Java class files
@@ -15,16 +40,22 @@ dist/
 
 # Log files
 *.log
+yarn.lock
+Gemfile.lock
+npm-debug.log
+yarn-error.log
+package-lock.json
 
 # Package files
 *.jar
 
 # Maven
 target/
-dist/
 
 # JetBrains IDE
+.vs/
 .idea/
+.vscode/
 
 # Unit test reports
 TEST*.xml
@@ -48,3 +79,27 @@ Thumbs.db
 *.mov
 *.wmv
 
+# BUCK
+buck-out/
+\.buckd/
+*.keystore
+!debug.keystore
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+*/fastlane/report.xml
+*/fastlane/Preview.html
+*/fastlane/screenshots
+
+# Bundle artifact
+*.jsbundle
+
+# CocoaPods
+vendor
+/ios/Pods/
+/ios/Podfile.lock
