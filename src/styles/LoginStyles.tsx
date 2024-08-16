@@ -48,6 +48,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     color: '#bebebe',
     marginBottom: 20,
+    bottom : "60%",
+    width : width * 0.4,
+    left : "56%",
+  },
+  rememberMeContainer: {
+    left : "2%",
+    width : width * 0.4,
   },
   signupLink: {
     textAlign: 'center',
@@ -88,6 +95,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: '80%',
   },
+
+ 
 });
 
 export default styles;

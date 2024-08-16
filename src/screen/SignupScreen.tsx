@@ -9,6 +9,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import styles from '../styles/SignupStyles';
 import { auth } from '../utils/firebaseConfig';
 
+
+
 const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

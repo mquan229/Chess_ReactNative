@@ -1,24 +1,52 @@
-// src/screen/LoginScreen.tsx
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import BouncyCheckbox from "react-native-bouncy-checkbox";
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../navigators/navigation';
 import styles from '../styles/LoginStyles';
 import { auth } from '../utils/firebaseConfig';
 
+
+
+
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  useEffect(() => {
+    // Load saved email and password from AsyncStorage
+    const loadSavedCredentials = async () => {
+      try {
+        const savedEmail = await AsyncStorage.getItem('email');
+        const savedPassword = await AsyncStorage.getItem('password');
+        if (savedEmail) setEmail(savedEmail);
+        if (savedPassword) setPassword(savedPassword);
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+      }
+    };
+    loadSavedCredentials();
+  }, []);
 
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log('Login successful, navigating to Home...');
-      navigation.navigate('Main', { screen: 'Home' }); // Chuyển hướng đến Home trong BottomTabsNavigator
+      if (rememberMe) {
+        await AsyncStorage.setItem('email', email);
+        await AsyncStorage.setItem('password', password);
+      } else {
+        await AsyncStorage.removeItem('email');
+        await AsyncStorage.removeItem('password');
+      }
+      navigation.navigate('Main', { screen: 'Home' }); // Navigate to Home in BottomTabsNavigator
     } catch (error: any) {
       console.error('Error logging in:', error);
       if (error.code === 'auth/user-not-found') {
@@ -44,14 +72,14 @@ const LoginScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Hello</Text>
       <Text style={styles.subtitle}>Sign in to your account</Text>
-      
+
       <View style={styles.inputContainer}>
         <Image style={styles.icon} source={require('../assets/profile.png')} />
         <TextInput
           style={styles.input}
           placeholder="Email"
           value={email}
-          onChangeText={text => setEmail(text)}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -62,8 +90,15 @@ const LoginScreen = () => {
           placeholder="Password"
           secureTextEntry
           value={password}
-          onChangeText={text => setPassword(text)}
+          onChangeText={setPassword}
         />
+      </View>
+
+      <View style={styles.rememberMeContainer}>
+        <BouncyCheckbox 
+          text = "Remember me"
+          onPress={(isChecked) => setRememberMe(isChecked)}
+         />
       </View>
 
       <TouchableOpacity onPress={handleForgotPassword}>
