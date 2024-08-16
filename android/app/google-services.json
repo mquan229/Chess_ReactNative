@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1091513922419",
+    "project_id": "chessapp-mobi",
+    "storage_bucket": "chessapp-mobi.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1091513922419:android:99acc1b482f55fde1e4b06",
+        "android_client_info": {
+          "package_name": "com.covua_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1htNVoIe3AcuExR5oDdfUCZUVA5CLfC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
