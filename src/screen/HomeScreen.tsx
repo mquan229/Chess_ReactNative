@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import styles from '../styles/HomeScreenStyles';
 import CreateRoom from './CreateRoom';
@@ -60,6 +60,7 @@ const renderItem = ({ item }: { item: ListItem }) => {
   return (
     // <View style={{flex:1,height : 80, width : 1000}}>
       <TouchableOpacity style={[styles.item,]}>
+        <Image style={styles.image} source={item.image} />
         <View style={styles.itemContent}>
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.description}>{item.description}</Text>
