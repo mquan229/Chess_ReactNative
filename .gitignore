@@ -57,6 +57,9 @@ package-lock.json
 # Package files
 *.jar
 
+# Ngoại lệ: Giữ lại gradle-wrapper.jar
+!gradle-wrapper.jar
+
 # Maven
 target/
 <<<<<<< HEAD
