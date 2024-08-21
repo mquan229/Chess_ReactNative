@@ -6,8 +6,7 @@ const { width, height } = Dimensions.get('window');
 const SettingsScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Settings Screen</Text>
-      {/* Thêm nội dung cho trang Settings ở đây */}
+      <Text>Setting Screen</Text>
     </View>
   );
 };
@@ -15,9 +14,6 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#cfd8dc',
   },
   title: {
     fontSize: 24,
