@@ -1,13 +1,16 @@
-/* eslint-disable prettier/prettier */
 module.exports = {
   presets: [
-  'module:@react-native/babel-preset',
-  '@babel/preset-react',
-     ],
+    'module:@react-native/babel-preset',
+    '@babel/preset-react',
+  ],
 
-    plugins :[
-      ["@babel/plugin-transform-react-jsx", {
-        "runtime": "automatic"
-      }]
-    ]
+  plugins: [
+    'react-native-reanimated/plugin', 
+    [
+      '@babel/plugin-transform-react-jsx',
+      {
+        runtime: 'automatic',
+      },
+    ],
+  ],
 };

@@ -4,7 +4,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import styles from '../styles/HomeScreenStyles';
 import CreateRoom from './CreateRoom';
 
-
 interface ListItem {
   title: string;
   description: string;
@@ -14,9 +13,6 @@ interface ListItem {
   const HomeScreen = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handlePress = () => {
-    setIsModalVisible(true);
-  };
   const data = [
     {
       title: 'Chơi Với Bạn',
