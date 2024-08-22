@@ -1,41 +1,39 @@
 import { Chess } from "chess.js";
-import React, { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import { Dimensions, StyleSheet, View } from "react-native";
 import Background from "../screen/Background";
-import { BOARD_SIZE } from "../utils/Notation";
 import Piece from "./Piece";
+
+const { width } = Dimensions.get("window");
+const SIZE = width / 8;
 
 const styles = StyleSheet.create({
   container: {
-    width: BOARD_SIZE,
-    height: BOARD_SIZE,
+    width: width,
+    height: width,
   },
 });
 
 const Board = () => {
-  const chess = new Chess(); // Khởi tạo đối tượng chess toàn cục
+  const chess = useRef(new Chess()).current;
   const [state, setState] = useState({
     player: "w",
-    board: chess.board(), // Khởi tạo với trạng thái ban đầu
+    board: chess.board(),
   });
 
   const onTurn = useCallback(() => {
-    setState((prevState) => {
-      const newPlayer = prevState.player === "w" ? "b" : "w";
-      chess.board(); // Cập nhật trạng thái của chess
-      return {
-        player: newPlayer,
-        board: chess.board(),
-      };
+    setState({
+      player: state.player === "w" ? "b" : "w",
+      board: chess.board(),
     });
-  }, [chess]);
+  }, [chess, state.player]);
 
   return (
     <View style={styles.container}>
       <Background />
       {state.board.map((row, y) =>
         row.map((piece, x) => {
-          if (piece !== null) {
+          if (piece) {
             return (
               <Piece
                 key={`${x}-${y}`}

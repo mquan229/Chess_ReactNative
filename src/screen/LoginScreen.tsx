@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -9,7 +8,6 @@ import BouncyCheckbox from "react-native-bouncy-checkbox";
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../navigators/navigation';
 import styles from '../styles/LoginStyles';
-import { auth } from '../utils/firebaseConfig';
 
 
 
@@ -39,7 +37,8 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // await signInWithEmailAndPassword(auth, email, password);
+      
       console.log('Login successful, navigating to Home...');
       if (rememberMe) {
         await AsyncStorage.setItem('email', email);

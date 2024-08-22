@@ -1,17 +1,23 @@
+import { Square } from "chess.js";
 import { Dimensions } from "react-native";
+import { Vector } from "react-native-redash";
 
 const { width } = Dimensions.get("window");
-export const BOARD_SIZE = width * 0.8; // Adjust the factor based on your design
-export const SIZE = BOARD_SIZE / 8  ; // Chessboard has 8x8 squares
+export const SIZE = width / 8;
 
-export const toPosition = (translation: { x: number; y: number }): { row: number; col: number } => {
-  'worklet';
-  const col = Math.floor(translation.x / SIZE);
-  const row = Math.floor(translation.y / SIZE);
-  return { row, col };
+export const toTranslation = (to: Square) => {
+  "worklet";
+  const col = to.charCodeAt(0) - "a".charCodeAt(0);
+  const row = 8 - parseInt(to[1], 10);
+  return {
+    x: col * SIZE,
+    y: row * SIZE,
+  };
 };
 
-export const toTranslation = (position: { row: number; col: number }) => {
-  'worklet';
-  return { x: position.col * SIZE, y: position.row * SIZE };
+export const toPosition = ({ x, y }: Vector): Square => {
+  "worklet";
+  const col = String.fromCharCode(97 + Math.round(x / SIZE));
+  const row = `${8 - Math.round(y / SIZE)}`;
+  return `${col}${row}` as Square;
 };
