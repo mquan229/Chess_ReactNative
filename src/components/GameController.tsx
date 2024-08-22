@@ -1,83 +1,42 @@
+// GameController.tsx
 import { Chess } from "chess.js";
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
+import Board from "./Board";
 
-// Context để chia sẻ trạng thái giữa các component
-const GameContext = createContext(null);
-
-export const useGame = () => useContext(GameContext);
-
-const GameController = ({ children }) => {
-  const [chess] = useState(new Chess());
-  const [state, setState] = useState({
-    player: "w",
-    board: chess.board(),
-    selectedPiece: null,
-    validMoves: [],
-  });
-
-  const onTurn = useCallback(() => {
-    setState((prevState) => ({
-      ...prevState,
-      player: prevState.player === "w" ? "b" : "w",
-      board: chess.board(),
-    }));
-  }, [chess]);
-
-  const resetBoard = useCallback(() => {
-    chess.reset();
-    setState({
+const GameController = () => {
+    const chess = useRef(new Chess()).current;
+    const [state, setState] = useState<{
+      player: "w" | "b";
+      board: ReturnType<Chess["board"]>;
+    }>({
       player: "w",
       board: chess.board(),
-      selectedPiece: null,
-      validMoves: [],
     });
-  }, [chess]);
-
-  const selectPiece = useCallback((piece, fromSquare) => {
-    const moves = chess.moves({ square: fromSquare, verbose: true });
-    setState((prevState) => ({
-      ...prevState,
-      selectedPiece: piece,
-      validMoves: moves.map((move) => move.to),
-    }));
-  }, [chess]);
-
-  const movePiece = useCallback(
-    (from, to) => {
-      const move = chess.move({ from, to });
-      if (move) {
-        onTurn();
-      }
-      setState((prevState) => ({
-        ...prevState,
-        selectedPiece: null,
-        validMoves: [],
+  
+    const onTurn = useCallback(() => {
+      setState({
+        player: state.player === "w" ? "b" : "w",
         board: chess.board(),
-      }));
-    },
-    [chess, onTurn]
-  );
-
-  const checkWinner = useCallback(() => {
-    if (chess.isCheckmate()) {
-      return state.player === "w" ? "Black Wins" : "White Wins";
-    }
-    return null;
-  }, [chess, state.player]);
-
-  return (
-    <GameContext.Provider
-      value={{
-        state,
-        selectPiece,
-        movePiece,
-        resetBoard,
-        checkWinner,
-      }}
-    >
-      {children}
-    </GameContext.Provider>
-  );
-};
+      });
+    }, [chess, state.player]);
+  
+    const resetGame = useCallback(() => {
+      chess.reset();
+      setState({
+        player: "w",
+        board: chess.board(),
+      });
+    }, [chess]);
+  
+    return (
+      <Board
+        board={state.board}
+        player={state.player}
+        onTurn={onTurn}
+        resetGame={resetGame}
+        chess={chess}
+      />
+    );
+  };
 
 export default GameController;

@@ -12,6 +12,7 @@ export type RootStackParamList = {
   Game: { roomId: number };
   Piece: undefined;
   Notation : undefined;
+  Board : undefined;
 };
 
 // Các loại cho Bottom Tab Navigator
@@ -20,6 +21,5 @@ export type RootTabParamList = {
   Settings: undefined;
   Room: undefined;
   Profile: undefined;
-  Background : undefined;
   Board : undefined;
 };
