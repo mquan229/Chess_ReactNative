@@ -8,12 +8,14 @@
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: '#f5f5f5',
-      padding: 20,
+      padding: '5%',
     },
     title: {
-      fontSize: 24,
+      fontSize: 26,
       fontWeight: 'bold',
-      marginBottom: 20,
+      bottom : "10%",
+      width : "80%",
+      textAlign : "justify",
     },
     button: {
       width: width * 0.15,
@@ -30,21 +32,24 @@
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 16,
+      padding: '3%',
+      paddingBottom : '10%',
       borderBottomWidth: 1,
       borderBottomColor: '#ccc',
       width : width * 1,
     },
     image: {
-      width: 50,
-      height: 50,
-      marginRight: 16,
+      width: width * 0.25,
+      height: height * 0.15,
+      marginRight: '4%',
     },
     itemContent: {
       flex: 1,
     },
     description: {
       fontSize: 14,
+      width : '80%',
     },
   });
     export default styles;
+    
