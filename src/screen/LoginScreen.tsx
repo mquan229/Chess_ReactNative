@@ -26,8 +26,10 @@ const LoginScreen = () => {
       try {
         const savedEmail = await AsyncStorage.getItem('email');
         const savedPassword = await AsyncStorage.getItem('password');
+        const savedRememberMe = await AsyncStorage.getItem('rememberMe');
         if (savedEmail) setEmail(savedEmail);
         if (savedPassword) setPassword(savedPassword);
+        if (savedRememberMe === 'true') setRememberMe(true);
       } catch (error) {
         console.error('Error loading saved credentials:', error);
       }
@@ -46,6 +48,8 @@ const LoginScreen = () => {
         await AsyncStorage.removeItem('email');
         await AsyncStorage.removeItem('password');
       }
+      // Save the rememberMe state
+        await AsyncStorage.setItem('rememberMe', rememberMe ? 'true' : 'false');
       navigation.navigate('Main', { screen: 'Home' }); // Navigate to Home in BottomTabsNavigator
     } catch (error: any) {
       console.error('Error logging in:', error);
@@ -95,10 +99,16 @@ const LoginScreen = () => {
       </View>
 
       <View style={styles.rememberMeContainer}>
-        <BouncyCheckbox 
-          text = "Remember me"
-          onPress={(isChecked) => setRememberMe(isChecked)}
-         />
+      <BouncyCheckbox 
+        text="Remember me"
+        isChecked={rememberMe}
+        onPress={() => {
+          const newRememberMe = !rememberMe;
+          const currentTime = new Date().toLocaleString();
+          console.log('Trạng thái checkbox đã thay đổi lúc:', currentTime, 'Trạng thái mới:', newRememberMe);
+          setRememberMe(newRememberMe);
+        }}
+      />
       </View>
 
       <TouchableOpacity onPress={handleForgotPassword}>

@@ -4,7 +4,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
+import Board from "../components/Board";
 import { RootStackParamList, RootTabParamList } from "../navigators/navigation";
+import Background from "../screen/Background";
 import CreateRoom from "../screen/CreateRoom";
 import ForgotPasswordScreen from "../screen/ForgotPass";
 import GameScreen from "../screen/GameScreen";
@@ -26,6 +28,8 @@ const BottomTabsNavigator = () => {
       <Tab.Screen name="Room" component={ListRoom} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Background" component={Background} />
+      <Tab.Screen name="Board" component={Board} />
     </Tab.Navigator>
   );
 };
