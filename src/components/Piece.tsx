@@ -1,11 +1,12 @@
-import { Chess, Move, Square } from "chess.js";
+import { Chess, Square } from "chess.js";
 import React, { useCallback } from "react";
 import { Image, StyleSheet } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
-  useSharedValue
+  useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 import { Vector } from "react-native-redash";
 import { SIZE, toPosition, toTranslation } from "../utils/Notation";
@@ -42,46 +43,46 @@ interface PieceProps {
   chess: Chess;
   onTurn: () => void;
   enabled: boolean;
+  setShowWinModal: () => void;
 }
 
-const Piece = ({ id, startPosition, chess, onTurn, enabled }: PieceProps) => {
+const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: PieceProps) => {
   const isGestureActive = useSharedValue(false);
-  const offsetX = useSharedValue(0);
-  const offsetY = useSharedValue(0);
-  const translateX = useSharedValue(startPosition.x * SIZE);
-  const translateY = useSharedValue(startPosition.y * SIZE);
-
-  function convertToSquare(position: { row: number; col: number }): Square {
-    'worklet';
-    const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-    const file = files[position.col];
-    const rank = (8 - position.row).toString();
-    return `${file}${rank}` as Square;
-  }
+  const offsetX = useSharedValue(startPosition.x * SIZE);
+  const offsetY = useSharedValue(startPosition.y * SIZE);
+  const translateX = useSharedValue(offsetX.value);
+  const translateY = useSharedValue(offsetY.value);
 
   const movePiece = useCallback(
     (to: Square) => {
-      runOnJS(() => {
-        console.log(`Attempting to move to ${to}`);
-        const moves: Move[] = chess.moves({ verbose: true }) as Move[];
-        const fromPosition = toPosition({ x: offsetX.value, y: offsetY.value });
-        const from = convertToSquare(fromPosition);
-        const move = moves.find((m) => m.from === from && m.to === to);
-        if (move) {
-          chess.move(move.san);
-          onTurn(); // Cập nhật trạng thái bàn cờ và chuyển lượt
-        } else {
-          console.log(`Invalid move from ${from} to ${to}`);
+      const moves = chess.moves({ verbose: true });
+      const from = toPosition({ x: offsetX.value, y: offsetY.value });
+      const move = moves.find((m) => m.from === from && m.to === to);
+      const { x, y } = toTranslation(move ? move.to : from);
+  
+      if (move) {
+        chess.move({ from, to });
+        runOnJS(onTurn)();
+  
+        // Kiểm tra nếu có checkmate
+        if (chess.isCheckmate()) {
+          // Hiển thị modal hoặc xử lý logic kết thúc trò chơi
+          setShowWinModal(true);
+          console.log("Checkmate!"); // Kiểm tra xem console có in ra hay không
+          runOnJS(onTurn)(); // Gọi lại để thông báo checkmate
         }
-      })();
+      }
+  
+      translateX.value = withTiming(x, {}, () => (offsetX.value = x));
+      translateY.value = withTiming(y, {}, () => (offsetY.value = y));
+      isGestureActive.value = false;
     },
-    [chess, offsetX, offsetY, onTurn]
+    [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn]
   );
+  
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
-      offsetX.value = translateX.value;
-      offsetY.value = translateY.value;
       isGestureActive.value = true;
     })
     .onUpdate((event) => {
@@ -89,10 +90,7 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled }: PieceProps) => {
       translateY.value = offsetY.value + event.translationY;
     })
     .onEnd(() => {
-      const position = toPosition({ x: translateX.value, y: translateY.value });
-      const square = convertToSquare(position);
-      runOnJS(movePiece)(square);
-      isGestureActive.value = false; // Reset trạng thái
+      runOnJS(movePiece)(toPosition({ x: translateX.value, y: translateY.value }));
     });
 
   const style = useAnimatedStyle(() => ({
@@ -104,44 +102,12 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled }: PieceProps) => {
     ],
   }));
 
-  const original = useAnimatedStyle(() => ({
-    position: "absolute",
-    width: SIZE,
-    height: SIZE,
-    zIndex: 0,
-    backgroundColor: isGestureActive.value ? "rgba(255, 255, 0, 0.5)" : "transparent",
-    transform: [
-      { translateX: offsetX.value },
-      { translateY: offsetY.value },
-    ],
-  }));
-
-  const underlay = useAnimatedStyle(() => {
-    const position = toPosition({ x: translateX.value, y: translateY.value });
-    const translation = toTranslation(position);
-    return {
-      position: "absolute",
-      width: SIZE,
-      height: SIZE,
-      zIndex: 0,
-      backgroundColor: isGestureActive.value ? "rgba(255, 255, 0, 0.5)" : "transparent",
-      transform: [
-        { translateX: translation.x },
-        { translateY: translation.y },
-      ],
-    };
-  });
-
   return (
-    <>
-      <Animated.View style={original} />
-      <Animated.View style={underlay} />
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={style}>
-          <Image source={PIECES[id]} style={styles.piece} />
-        </Animated.View>
-      </GestureDetector>
-    </>
+    <GestureDetector gesture={panGesture}>
+      <Animated.View style={style}>
+        <Image source={PIECES[id]} style={styles.piece} />
+      </Animated.View>
+    </GestureDetector>
   );
 };
 
