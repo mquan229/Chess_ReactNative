@@ -43,9 +43,10 @@ interface PieceProps {
   chess: Chess;
   onTurn: () => void;
   enabled: boolean;
+  setShowWinModal: () => void;
 }
 
-const Piece = ({ id, startPosition, chess, onTurn, enabled }: PieceProps) => {
+const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: PieceProps) => {
   const isGestureActive = useSharedValue(false);
   const offsetX = useSharedValue(startPosition.x * SIZE);
   const offsetY = useSharedValue(startPosition.y * SIZE);
@@ -58,18 +59,27 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled }: PieceProps) => {
       const from = toPosition({ x: offsetX.value, y: offsetY.value });
       const move = moves.find((m) => m.from === from && m.to === to);
       const { x, y } = toTranslation(move ? move.to : from);
-
+  
       if (move) {
         chess.move({ from, to });
         runOnJS(onTurn)();
+  
+        // Kiểm tra nếu có checkmate
+        if (chess.isCheckmate()) {
+          // Hiển thị modal hoặc xử lý logic kết thúc trò chơi
+          setShowWinModal(true);
+          console.log("Checkmate!"); // Kiểm tra xem console có in ra hay không
+          runOnJS(onTurn)(); // Gọi lại để thông báo checkmate
+        }
       }
-
+  
       translateX.value = withTiming(x, {}, () => (offsetX.value = x));
       translateY.value = withTiming(y, {}, () => (offsetY.value = y));
       isGestureActive.value = false;
     },
     [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn]
   );
+  
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {

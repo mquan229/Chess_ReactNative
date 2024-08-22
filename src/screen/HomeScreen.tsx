@@ -22,19 +22,19 @@ const HomeScreen = () => {
       title: 'Chơi Với Bạn',
       description: 'Chơi offline cùng với bạn của bạn',
       image: require('../assets/chess/bk.png'), // Đường dẫn đến hình ảnh
-      link: 'Board',
+      link: 'CompetitiveGame',
     },
     {
       title: 'Chơi Với Máy',
       description: 'Đấu Offline với Máy',
       image: require('../assets/chess/bk.png'),
-      link: '', 
+      link: 'AIGame', 
     },
     {
       title: 'Chơi Với Người Lạ',
       description: 'Tìm bước đi đúng đắn! Đánh Bại Đối Thủ',
       image: require('../assets/chess/bk.png'),
-      link: '', 
+      link: 'OnlineGame', 
     },
   ];
 
