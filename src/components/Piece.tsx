@@ -1,5 +1,5 @@
 import { Chess, Square } from "chess.js";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { Image, StyleSheet } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Vector } from "react-native-redash";
 import { SIZE, toPosition, toTranslation } from "../utils/Notation";
+import PromotionPopup from "./PromotionPopup"; // Import thêm PromotionPopup
 
 const styles = StyleSheet.create({
   piece: {
@@ -43,7 +44,7 @@ interface PieceProps {
   chess: Chess;
   onTurn: () => void;
   enabled: boolean;
-  setShowWinModal: () => void;
+  setShowWinModal: (show: boolean) => void;
 }
 
 const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: PieceProps) => {
@@ -53,33 +54,55 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: P
   const translateX = useSharedValue(offsetX.value);
   const translateY = useSharedValue(offsetY.value);
 
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [promotionMove, setPromotionMove] = useState<{ from: Square; to: Square } | null>(null);
+
   const movePiece = useCallback(
     (to: Square) => {
       const moves = chess.moves({ verbose: true });
       const from = toPosition({ x: offsetX.value, y: offsetY.value });
       const move = moves.find((m) => m.from === from && m.to === to);
-      const { x, y } = toTranslation(move ? move.to : from);
-  
-      if (move) {
-        chess.move({ from, to });
-        runOnJS(onTurn)();
-  
-        // Kiểm tra nếu có checkmate
-        if (chess.isCheckmate()) {
-          // Hiển thị modal hoặc xử lý logic kết thúc trò chơi
-          setShowWinModal(true);
-          console.log("Checkmate!"); // Kiểm tra xem console có in ra hay không
-          runOnJS(onTurn)(); // Gọi lại để thông báo checkmate
+
+      // Kiểm tra nếu quân tốt cần thăng cấp
+      if (move && move.flags.includes("p")) {
+        setPromotionMove({ from, to });
+        setShowPromotionModal(true);
+      } else {
+        if (move) {
+          chess.move({ from, to });
+          runOnJS(onTurn)();
+
+          // Kiểm tra nếu có checkmate
+          if (chess.isCheckmate()) {
+            setShowWinModal(true);
+            runOnJS(onTurn)();
+          }
         }
+
+        const { x, y } = toTranslation(move ? move.to : from);
+        translateX.value = withTiming(x, {}, () => (offsetX.value = x));
+        translateY.value = withTiming(y, {}, () => (offsetY.value = y));
+        isGestureActive.value = false;
       }
-  
-      translateX.value = withTiming(x, {}, () => (offsetX.value = x));
-      translateY.value = withTiming(y, {}, () => (offsetY.value = y));
-      isGestureActive.value = false;
     },
-    [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn]
+    [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn, setShowWinModal]
   );
-  
+
+  const handlePromotion = useCallback(
+    (piece: string) => {
+      if (promotionMove) {
+        chess.move({
+          from: promotionMove.from,
+          to: promotionMove.to,
+          promotion: piece,
+        });
+        setShowPromotionModal(false);
+        setPromotionMove(null);
+        runOnJS(onTurn)();
+      }
+    },
+    [chess, promotionMove, onTurn]
+  );
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -103,11 +126,18 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: P
   }));
 
   return (
-    <GestureDetector gesture={panGesture}>
-      <Animated.View style={style}>
-        <Image source={PIECES[id]} style={styles.piece} />
-      </Animated.View>
-    </GestureDetector>
+    <>
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={style}>
+          <Image source={PIECES[id]} style={styles.piece} />
+        </Animated.View>
+      </GestureDetector>
+
+      {/* Popup thăng cấp */}
+      {showPromotionModal && (
+        <PromotionPopup isVisible={showPromotionModal} onSelect={handlePromotion} />
+      )}
+    </>
   );
 };
 

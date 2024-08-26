@@ -110,7 +110,7 @@ const Board = ({
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text>Game Over! {player === "w" ? "Black" : "White"} wins!</Text>
+            <Text>Game Over! {player === "w" ? "White" : "Black"} wins!</Text>
             <TouchableOpacity style={styles.modalButton} onPress={handleCloseModal}>
               <Text style={styles.modalButtonText}>OK</Text>
             </TouchableOpacity>
