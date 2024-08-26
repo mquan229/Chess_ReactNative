@@ -28,7 +28,7 @@ const AIGame = () => {
     // Kiểm tra nếu đến lượt AI (đối thủ) thì thực hiện nước đi của AI
     if (state.player === "b" && !chess.isGameOver()) {
       setTimeout(() => {
-        const aiMove = findBestMove(chess, 2); // Sử dụng depth = 2 cho AI để giảm lag
+        const aiMove = findBestMove(chess, 2); // Tăng độ sâu của AI lên 2 để tăng chất lượng
         if (aiMove) {
           chess.move(aiMove);
           setState({
