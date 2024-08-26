@@ -51,6 +51,8 @@ interface BoardProps {
   setShowWinModal: (show: boolean) => void;
   chess: Chess;
   mode: "competitive" | "ai" | "online";
+  onMove?: (move: string) => void; // Thêm prop onMove
+  currentTurn?: "w" | "b";         // Thêm prop currentTurn
 }
 
 const Board = ({
@@ -62,6 +64,8 @@ const Board = ({
   setShowWinModal,
   chess,
   mode,
+  onMove,       // Thêm onMove ở đây
+  currentTurn,  // Thêm currentTurn ở đây
 }: BoardProps) => {
   const [highlights, setHighlights] = useState<Square[]>([]);
 
