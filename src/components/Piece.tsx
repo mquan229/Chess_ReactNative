@@ -47,9 +47,10 @@ interface PieceProps {
   enabled: boolean;
   setShowWinModal: (show: boolean) => void;
   onMove: (move: string) => void;
+  highlightMove: (from: Square, to: Square) => void;
 }
 
-const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onMove }
+const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onMove, highlightMove }
   : PieceProps) => {
   const isGestureActive = useSharedValue(false);
   const offsetX = useSharedValue(startPosition.x * SIZE);
@@ -79,6 +80,10 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onM
           saveMove({ type: 'PlayerMove', details: playersMove });
 
           chess.move({ from, to });
+          runOnJS(onTurn)();
+
+          // Highlight ô mới và ô cũ
+          highlightMove(from, to);
           runOnJS(onTurn)();
 
           // Kiểm tra nếu có checkmate
