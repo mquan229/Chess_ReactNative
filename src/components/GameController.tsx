@@ -14,6 +14,13 @@ const GameController = ({ mode }: GameControllerProps) => {
   });
   const [showWinModal, setShowWinModal] = useState(false);
 
+  const resetHighlights = () => {
+    setState((prevState) => ({
+      ...prevState,
+      highlights: [], // xóa highlights
+    }));
+  };
+
   const onTurn = useCallback(() => {
     setState((prevState) => ({
       player: prevState.player === "w" ? "b" : "w",
@@ -32,7 +39,8 @@ const GameController = ({ mode }: GameControllerProps) => {
       board: chess.board(),
     });
     setShowWinModal(false);
-  }, [chess]);
+    resetHighlights(); // Clear highlights when resetting the game
+  }, [chess,resetHighlights]);
 
 
   const onTurnBack = useCallback(() => {
@@ -53,8 +61,9 @@ const GameController = ({ mode }: GameControllerProps) => {
       resetGame={resetGame}
       showWinModal={showWinModal}
       setShowWinModal={setShowWinModal}
-      // onMove={onMove}
+      onMove={() => { }}
       onTurnBack={onTurnBack}
+      resetHighlights={resetHighlights}
     />
   );
 };

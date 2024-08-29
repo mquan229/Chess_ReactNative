@@ -19,20 +19,20 @@ const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const data = [
     {
-      title: 'Chơi Với Bạn',
-      description: 'Chơi offline cùng với bạn của bạn',
+      title: 'Chơi đối kháng',
+      description: 'Hai người chơi trên cùng một máy',
       image: require('../assets/chess/bk.png'), // Đường dẫn đến hình ảnh
       link: 'CompetitiveGame',
     },
     {
-      title: 'Chơi Với Máy',
-      description: 'Đấu Offline với Máy',
+      title: 'Chơi với máy',
+      description: 'Sử dụng AI làm đối thủ',
       image: require('../assets/chess/bk.png'),
       link: 'AIGame', 
     },
     {
-      title: 'Chơi Với Người Lạ',
-      description: 'Tìm bước đi đúng đắn! Đánh Bại Đối Thủ',
+      title: 'Chơi trực tuyến',
+      description: 'Kết bạn chơi với nhau ',
       image: require('../assets/chess/bk.png'),
       link: 'OnlineGame', 
     },
