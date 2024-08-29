@@ -43,25 +43,27 @@ const styles = StyleSheet.create({
 });
 
 interface BoardProps {
+  chess: Chess;
   board: ReturnType<Chess["board"]>;
   player: "w" | "b";
   onTurn: () => void;
   resetGame: () => void;
   showWinModal: boolean;
   setShowWinModal: (show: boolean) => void;
-  chess: Chess;
-  mode: "competitive" | "ai" | "online";
+  onMove: (move: string) => void; // Thêm prop onMove
+  onTurnBack: () => void;         // Thêm prop onTurnBack
 }
 
 const Board = ({
+  chess,
   board,
   player,
   onTurn,
   resetGame,
   showWinModal,
   setShowWinModal,
-  chess,
-  mode,
+  onMove,       // Thêm onMove ở đây
+  onTurnBack,  // Thêm onTurnBack ở đây
 }: BoardProps) => {
   const [highlights, setHighlights] = useState<Square[]>([]);
 
@@ -71,9 +73,8 @@ const Board = ({
   };
 
   useEffect(() => {
-    console.log("showWinModal:", showWinModal); // Kiểm tra giá trị của showWinModal
+    console.log("showWinModal:", showWinModal); {/* Kiểm tra giá trị của showWinModal*/}
   }, [showWinModal]);
-
 
   return (
     <View style={styles.container}>
@@ -91,6 +92,7 @@ const Board = ({
                   onTurn={onTurn}
                   enabled={player === piece.color}
                   setShowWinModal={setShowWinModal}
+                  onMove={onMove}
                 />
               );
             }
@@ -102,6 +104,7 @@ const Board = ({
         return <View key={`${x}-${y}`} style={[styles.highlight, { left: x, top: y }]} />;
       })}
       <Button title="Reset Game" onPress={resetGame} />
+      <Button title="Turn Back" onPress={onTurnBack} />
 
       <Modal
         transparent={true}

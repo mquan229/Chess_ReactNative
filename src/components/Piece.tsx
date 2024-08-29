@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Vector } from "react-native-redash";
+import { saveMove } from "../utils/api";
 import { SIZE, toPosition, toTranslation } from "../utils/Notation";
 import PromotionPopup from "./PromotionPopup"; // Import thêm PromotionPopup
 
@@ -45,9 +46,11 @@ interface PieceProps {
   onTurn: () => void;
   enabled: boolean;
   setShowWinModal: (show: boolean) => void;
+  onMove: (move: string) => void;
 }
 
-const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: PieceProps) => {
+const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onMove }
+  : PieceProps) => {
   const isGestureActive = useSharedValue(false);
   const offsetX = useSharedValue(startPosition.x * SIZE);
   const offsetY = useSharedValue(startPosition.y * SIZE);
@@ -62,13 +65,19 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: P
       const moves = chess.moves({ verbose: true });
       const from = toPosition({ x: offsetX.value, y: offsetY.value });
       const move = moves.find((m) => m.from === from && m.to === to);
-
+      
       // Kiểm tra nếu quân tốt cần thăng cấp
       if (move && move.flags.includes("p")) {
         setPromotionMove({ from, to });
         setShowPromotionModal(true);
       } else {
         if (move) {
+          // Tóm gọn log
+          const { color, from, lan, piece, to } = move;
+          const playersMove = { color, from, lan, piece, to };
+          console.log('Players Move:', playersMove);
+          saveMove({ type: 'PlayerMove', details: playersMove });
+
           chess.move({ from, to });
           runOnJS(onTurn)();
 
@@ -78,14 +87,15 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal }: P
             runOnJS(onTurn)();
           }
         }
-
+        // Update animation
         const { x, y } = toTranslation(move ? move.to : from);
         translateX.value = withTiming(x, {}, () => (offsetX.value = x));
         translateY.value = withTiming(y, {}, () => (offsetY.value = y));
         isGestureActive.value = false;
+
       }
     },
-    [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn, setShowWinModal]
+    [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn, setShowWinModal, onMove]
   );
 
   const handlePromotion = useCallback(

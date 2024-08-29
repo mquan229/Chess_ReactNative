@@ -34,16 +34,27 @@ const GameController = ({ mode }: GameControllerProps) => {
     setShowWinModal(false);
   }, [chess]);
 
+
+  const onTurnBack = useCallback(() => {
+    // Logic để quay lại nước đi trước
+    chess.undo();
+    setState({
+      player: chess.turn() === "w" ? "b" : "w",
+      board: chess.board(),
+    });
+  }, [chess]);
+
   return (
     <Board
+      chess={chess}
       board={state.board}
       player={state.player}
       onTurn={onTurn}
       resetGame={resetGame}
       showWinModal={showWinModal}
       setShowWinModal={setShowWinModal}
-      chess={chess} // Truyền chess vào Board
-      mode={mode}
+      // onMove={onMove}
+      onTurnBack={onTurnBack}
     />
   );
 };
