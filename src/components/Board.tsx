@@ -3,7 +3,9 @@ import React, { useEffect, useState } from "react";
 import { Button, Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Background from "../screen/Background";
 import { toPosition, toTranslation } from "../utils/Notation";
+import Arrow from "./Arrow";
 import Piece from "./Piece";
+
 
 const { width } = Dimensions.get("window");
 const SIZE = width / 8;
@@ -85,6 +87,8 @@ const Board = ({
 }: BoardProps) => {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [checkArrow, setCheckArrow] = useState<{ from: Square; to: Square } | null>(null);
+
   
 
   const handleCloseModal = () => {
@@ -93,35 +97,67 @@ const Board = ({
     resetGame();
   };
 
+  const getCenter = (square: Square) => {
+    const { x, y } = toTranslation(square);
+    return {
+      x: x + SIZE / 2,
+      y: y + SIZE / 2,
+    };
+  };
+
+  const renderArrow = () => {
+    if (!checkArrow) return null;
+    const from = getCenter(checkArrow.from);
+    const to = getCenter(checkArrow.to);
+    return <Arrow fromX={from.x} fromY={from.y} toX={to.x} toY={to.y} />;
+  };
+
   useEffect(() => {
     console.log("showWinModal:", showWinModal); {/* Kiểm tra giá trị của showWinModal*/}
   }, [showWinModal,resetHighlights]);
 
+  
   const highlightMove = (from: Square, to: Square) => {
     const newHighlights: Highlight[] = [
       { square: from, color: "rgba(0, 255, 0, 0.15)" },
       { square: to, color: "rgba(0, 255, 0, 0.8)" },
     ];
-
+  
     if (chess.inCheck()) {
       const kingSquare = chess.board().flatMap((row, y) =>
         row.map((piece, x) => {
           if (piece?.type === "k" && piece.color === chess.turn()) {
-            const square = toPosition({ x: x * SIZE, y: y * SIZE });
-            return { square, color: "rgba(255, 0, 0, 0.5)" };
+            return toPosition({ x: x * SIZE, y: y * SIZE });
           }
           return null;
         })
-      ).find(Boolean);
-
+      ).find(Boolean) as Square | null; // Cast to Square or null
+  
+      const attackingMove = chess.history({ verbose: true }).slice(-1)[0];
+      if (kingSquare && attackingMove) {
+        setCheckArrow({
+          to: attackingMove.to,
+          from: kingSquare
+        });
+      } else {
+        setCheckArrow(null);
+      }
+      
+  
       if (kingSquare) {
-        setHighlights([...newHighlights.filter(h => h.square !== kingSquare.square), kingSquare as Highlight]);
+        setHighlights([
+          ...newHighlights.filter(h => h.square !== kingSquare),
+          { square: kingSquare, color: "rgba(255, 0, 0, 0.5)" }
+        ]);
         return;
       }
+    } else {
+      setCheckArrow(null); // Nếu không bị chiếu tướng, mũi tên được reset
     }
-
+  
     setHighlights(newHighlights);
   };
+  
 
 useEffect(() => {
   if (chess.inCheck()) {
@@ -132,13 +168,27 @@ useEffect(() => {
         }
         return null;
       })
-    ).find(Boolean);
+    ).find(Boolean) as Square | null;
 
-    if (kingSquare) {
-      setHighlights(prev => [...prev, { square: kingSquare as Square, color: "rgba(255, 0, 0, 0.5)" }]);
+    const attackingMove = chess.history({ verbose: true }).slice(-1)[0];
+    if (kingSquare && attackingMove) {
+      setCheckArrow({
+        to: attackingMove.to,
+        from: kingSquare
+      });
+    } else {
+      setCheckArrow(null);
     }
+  } else {
+    setCheckArrow(null);
   }
 }, [chess]);
+
+  
+
+console.log("Check Arrow From:", checkArrow?.from, "To:", checkArrow?.to);
+
+
 
 
   return (
@@ -166,6 +216,7 @@ useEffect(() => {
           ]}
         />
       ))}
+     {renderArrow()}
       {board &&
         board.map((row, y) =>
           row.map((piece, x) => {
@@ -190,6 +241,7 @@ useEffect(() => {
       <Button title="Reset Game" onPress={() => {
         resetGame();
         setHighlights([]);
+        setCheckArrow(null);
 
       }} />
       <Button title="Turn Back" onPress={onTurnBack} />
