@@ -136,8 +136,8 @@ const Board = ({
       const attackingMove = chess.history({ verbose: true }).slice(-1)[0];
       if (kingSquare && attackingMove) {
         setCheckArrow({
-          to: attackingMove.to,
-          from: kingSquare
+          from: attackingMove.to,
+          to: kingSquare
         });
       } else {
         setCheckArrow(null);
