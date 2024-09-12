@@ -60,6 +60,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    borderWidth:1,
+    borderColor:'red',
   },
   reset: {
     fontSize: FontSize.size_6xl,
@@ -91,6 +93,48 @@ const styles = StyleSheet.create({
     bottom: 0,
     right : '10%',
   },
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalInput: {
+    width: '100%',
+    padding: 10,
+    marginVertical: 10,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 5,
+  },
+  modalButton: {
+    width: '100%',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  closeButton: {
+    marginTop: 10,
+  },
+  closeText: {
+    color: 'blue',
+  },
 });
+
+
 
 export default styles;

@@ -1,53 +1,157 @@
 import { useNavigation } from '@react-navigation/native';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore'; // Import các phương thức cần thiết
 import React, { useState } from 'react';
-import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
 import styles from '../styles/ForgotPasswordStyles';
-import { auth, db } from '../utils/firebaseConfig'; // Giả định bạn đã export auth từ firebaseConfig
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const navigation = useNavigation();
 
-  const handlePasswordReset = async () => {
+  const getToken = async () => {
     try {
-      await sendPasswordResetEmail(auth, email);
-      Alert.alert('Password reset email sent!');
-      navigation.navigate('Login'); // Chuyển hướng đến Login sau khi gửi email
+      const response = await fetch('http://covua.coi.vn/api/v1.0.0/auth/get-token', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      return data.token;
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Validation error', 'Email cannot be empty');
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        Alert.alert('Failed to get token');
+        return;
+      }
+
+      const response = await fetch('http://covua.coi.vn/api/v1.0.0/user/forgot-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Token': `${token}`,
+          'X-Access-OS': 'ANDROID',
+          'X-Access-Version': '1.0.0',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      console.log("=========", data);
+
+      if (response.ok) {
+        // Fetch the user ID after requesting password reset
+        const id = await checkEmailExisted(email);
+        if (id) {
+          setUserId(id);
+          setModalVisible(true);
+        }
+      } else {
+        Alert.alert('Request failed', data.message || 'Please check your information and try again.');
+      }
     } catch (error: any) {
-      console.error('Error sending password reset email:', error);
-      Alert.alert('Error sending password reset email: ' + error.message);
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const checkEmailExisted = async (email: string): Promise<string | null> => {
+    try {
+      const token = await getToken();
+      if (!token) {
+        Alert.alert('Failed to get token');
+        return null;
+      }
+
+      const response = await fetch('http://covua.coi.vn/api/v1.0.0/user/check-email', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Token': `${token}`,
+          'X-Access-OS': 'ANDROID',
+          'X-Access-Version': '1.0.0',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      console.log("========data", data);
+
+      if (response.ok && data && data.data && data.data.length > 0) {
+        const userId = data.data[0]._id;
+        console.log("User ID:", userId);
+        return userId;
+      } else {
+        Alert.alert('Email not found');
+        return null;
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+      return null;
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetCode || !newPassword || !userId) {
+      Alert.alert('Validation error', 'All fields must be filled');
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        Alert.alert('Failed to get token');
+        return;
+      }
+
+      const response = await fetch('http://covua.coi.vn/api/v1.0.0/user/reset-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Token': `${token}`,
+          'X-Access-OS': 'ANDROID',
+          'X-Access-Version': '1.0.0',
+        },
+        body: JSON.stringify({
+          id: userId,
+          password: newPassword,  // Ensure this is MD5 hashed
+          verify: resetCode,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("=========", data);
+
+      if (response.ok) {
+        Alert.alert('Password reset successfully');
+        navigation.navigate('Login'); // Redirect to login page
+      } else {
+        Alert.alert('Reset failed', data.message || 'Please check your information and try again.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
     }
   };
 
   const handleBacktoLogin = () => {
     navigation.navigate('Login');
   };
-
-  // Đặt lệnh cập nhật thông tin người dùng vào hook useEffect
-  React.useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        // Người dùng đã đăng nhập
-        try {
-          await updateDoc(doc(db, 'users', user.uid), {
-            lastPasswordChange: new Date()
-          });
-          console.log('Cập nhật thông tin người dùng thành công');
-        } catch (error) {
-          console.error('Lỗi khi cập nhật thông tin người dùng:', error);
-        }
-      } else {
-        // Người dùng chưa đăng nhập
-      }
-    });
-
-    // Cleanup the subscription
-    return () => unsubscribe();
-  }, [db]);
 
   return (
     <View style={styles.forgotPassword}>
@@ -57,11 +161,6 @@ const ForgotPasswordScreen = () => {
       <Text style={styles.resetPassword}>Reset Password</Text>
       
       <View style={styles.inputContainer}>
-        <Image
-          style={styles.emailIcon}
-          resizeMode="cover"
-          source={require('../assets/email.png')}
-        />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -70,15 +169,54 @@ const ForgotPasswordScreen = () => {
         />
       </View>
 
-      <TouchableOpacity style={styles.resetButton} onPress={handlePasswordReset}>
+      <TouchableOpacity style={styles.resetButton} onPress={handleForgotPassword}>
         <LinearGradient
           style={[styles.gradient]}
           locations={[0, 1]}
           colors={['#f97794', '#623aa2']}
         >
-          <Text style={styles.reset}>Reset</Text>
+          <Text style={styles.reset}>Request Reset Code</Text>
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Modal for entering reset code and new password */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Enter Reset Code and New Password</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Reset Code"
+              value={resetCode}
+              onChangeText={text => setResetCode(text)}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New Password"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={text => setNewPassword(text)}
+            />
+            <TouchableOpacity style={styles.modalButton} onPress={handleResetPassword}>
+              <LinearGradient
+                style={[styles.gradient]}
+                locations={[0, 1]}
+                colors={['#f97794', '#623aa2']}
+              >
+                <Text style={styles.reset}>Reset Password</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <Text style={styles.closeText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Image
         style={styles.forgotPasswordChild}

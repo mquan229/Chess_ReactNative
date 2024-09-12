@@ -1,4 +1,4 @@
-import { Chess } from "chess.js";
+import { Chess, Square } from "chess.js";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Board from "../components/Board";
 import { findBestMove } from "../utils/AI";
@@ -18,38 +18,39 @@ const AIGame = () => {
       setShowWinModal(true);
       return;
     }
-
-    // Thay đổi người chơi
     setState((prevState) => ({
       player: prevState.player === "w" ? "b" : "w",
       board: chess.board(),
     }));
   }, [chess]);
 
+  const resetHighlights = useCallback(() => {
+    // Clear highlights in the board (implementation depends on your logic)
+  }, []);
+
+  const highlightMove = useCallback((from: Square, to: Square) => {
+    // Implement move highlighting logic here if needed
+  }, []);
+
   useEffect(() => {
-    // Kiểm tra nếu đến lượt AI (đối thủ) thì thực hiện nước đi của AI
     if (state.player === "b" && !chess.isGameOver()) {
       setTimeout(() => {
-        const aiMove = findBestMove(chess, 2); // Tăng độ sâu của AI lên 2 để tăng chất lượng
+        const aiMove = findBestMove(chess, 2);
         if (aiMove) {
-          // Tóm gọn thông tin nước đi và log ra
-            const { color, from, lan, piece, to } = aiMove;
-            const AIMove = { color, from, lan, piece, to };
-            console.log('AI Move:', AIMove);
-
-            //lưu nước đi vào csdl
-            saveMove({ type: 'AIMove', details: AIMove });
-
-            // Lưu nước đi của AI vào lịch sử
-            setHistory(prevHistory => [...prevHistory, { player: "b", move: aiMove }]);
-          
+          const { color, from, lan, piece, to } = aiMove;
+          saveMove({ type: 'AIMove', details: { color, from, lan, piece, to } });
+          setHistory(prevHistory => [...prevHistory, { player: "b", move: aiMove }]);
           chess.move(aiMove);
           setState({
             player: "w",
             board: chess.board(),
           });
+
+          if (chess.inCheck()) {
+            highlightMove(aiMove.from, aiMove.to);
+          }
         }
-      }, 200); // Thêm độ trễ nhỏ để tạo cảm giác mượt mà
+      }, 200);
     }
   }, [state.player, chess]);
 
@@ -61,18 +62,16 @@ const AIGame = () => {
     });
     setShowWinModal(false);
     setHistory([]);
-  }, [chess]);
+    resetHighlights();
+  }, [chess, resetHighlights]);
 
   const onTurnBack = useCallback(() => {
     if (history.length > 0) {
-      // Quay lại hai nước đi để đảm bảo quay lại cả người chơi và AI
-      chess.undo(); // Undo nước đi của AI
-      chess.undo(); // Undo nước đi của người chơi
-      const lastMove = history.slice(-2, -1)[0];
+      chess.undo(); // Undo AI move
+      chess.undo(); // Undo player move
       setHistory(history.slice(0, -2));
-      
       setState({
-        player: lastMove ? lastMove.player : "w",
+        player: "w",
         board: chess.board(),
       });
     }
@@ -80,15 +79,17 @@ const AIGame = () => {
 
   return (
     <Board
-    board={state.board}
-    player={state.player}
-    onTurn={onTurn}
-    resetGame={resetGame}
-    showWinModal={showWinModal}
-    setShowWinModal={setShowWinModal}
-    chess={chess}
-    mode="ai"
-    onTurnBack={onTurnBack} // Truyền hàm onTurnBack
+      board={state.board}
+      player={state.player}
+      onTurn={onTurn}
+      resetGame={resetGame}
+      showWinModal={showWinModal}
+      setShowWinModal={setShowWinModal}
+      chess={chess}
+      onTurnBack={onTurnBack}
+      resetHighlights={resetHighlights}
+      onMove={() => {}} 
+      highlightMove={highlightMove}
     />
   );
 };
