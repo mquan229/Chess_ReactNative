@@ -1,17 +1,17 @@
 import { Chess, Square } from "chess.js";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Board from "../components/Board";
+import { useMoveHistory } from "../components/MoveHistory"; // Import useMoveHistory
 import { findBestMove } from "../utils/AI";
-import { saveMove } from "../utils/api";
 
 const AIGame = () => {
-  const [history, setHistory] = useState<{ player: string; move: any }[]>([]);
   const chess = useRef(new Chess()).current;
   const [state, setState] = useState({
     player: "w" as "w" | "b",
     board: chess.board(),
   });
   const [showWinModal, setShowWinModal] = useState(false);
+  const { addMove, history } = useMoveHistory(chess, () => onTurn());
 
   const onTurn = useCallback(() => {
     if (chess.isGameOver()) {
@@ -37,22 +37,21 @@ const AIGame = () => {
       setTimeout(() => {
         const aiMove = findBestMove(chess, 2);
         if (aiMove) {
-          const { color, from, lan, piece, to } = aiMove;
-          saveMove({ type: 'AIMove', details: { color, from, lan, piece, to } });
-          setHistory(prevHistory => [...prevHistory, { player: "b", move: aiMove }]);
-          chess.move(aiMove);
+          const { lan } = aiMove;
+          console.log("Nước đi của AI: ", lan);
+  
+          chess.move(aiMove); // Thực hiện nước đi của AI
+          addMove(lan); // Lưu nước đi của AI vào lịch sử giống như người chơi
+  
           setState({
             player: "w",
             board: chess.board(),
           });
-
-          if (chess.inCheck()) {
-            highlightMove(aiMove.from, aiMove.to);
-          }
         }
       }, 200);
     }
-  }, [state.player, chess]);
+  }, [state.player, chess, addMove]);
+  
 
   const resetGame = useCallback(() => {
     chess.reset();
@@ -61,21 +60,17 @@ const AIGame = () => {
       board: chess.board(),
     });
     setShowWinModal(false);
-    setHistory([]);
     resetHighlights();
   }, [chess, resetHighlights]);
 
   const onTurnBack = useCallback(() => {
-    if (history.length > 0) {
-      chess.undo(); // Undo AI move
-      chess.undo(); // Undo player move
-      setHistory(history.slice(0, -2));
-      setState({
-        player: "w",
-        board: chess.board(),
-      });
-    }
-  }, [chess, history]);
+    chess.undo(); // Undo AI move
+    chess.undo(); // Undo player move
+    setState({
+      player: "w",
+      board: chess.board(),
+    });
+  }, [chess]);
 
   return (
     <Board
