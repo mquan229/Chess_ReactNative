@@ -11,7 +11,6 @@ import styles from '../styles/LoginStyles';
 
 
 
-
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,35 +34,83 @@ const LoginScreen = () => {
     loadSavedCredentials();
   }, []);
 
-  const handleLogin = async () => {
+  const getToken = async () => {
     try {
-      // await signInWithEmailAndPassword(auth, email, password);
-      
-      console.log('Login successful, navigating to Home...');
-      if (rememberMe) {
-        await AsyncStorage.setItem('email', email);
-        await AsyncStorage.setItem('password', password);
+      const response = await fetch('http://covua.coi.vn/api/*/auth/get-token', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      console.log('======data', data);
+
+      if (response.ok) {
+        return data.token;
       } else {
-        await AsyncStorage.removeItem('email');
-        await AsyncStorage.removeItem('password');
+        console.error('Failed to get token');
+        return null;
       }
-      // Save the rememberMe state
-        await AsyncStorage.setItem('rememberMe', rememberMe ? 'true' : 'false');
-      navigation.navigate('Main', { screen: 'Home' }); // Navigate to Home in BottomTabsNavigator
-    } catch (error: any) {
-      console.error('Error logging in:', error);
-      if (error.code === 'auth/user-not-found') {
-        Alert.alert('User not found');
-      } else if (error.code === 'auth/wrong-password') {
-        Alert.alert('Wrong password');
-      } else {
-        Alert.alert('An error occurred', error.message);
-      }
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
     }
   };
-
+  
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Validation error', 'Email and password cannot be empty');
+      return;
+    }
+  
+    try {
+      // Lấy token
+      const token = await getToken();
+  
+      if (!token) {
+        Alert.alert('Failed to get token');
+        return;
+      }
+  
+      // Thực hiện yêu cầu đăng nhập
+      const response = await fetch('http://covua.coi.vn/api/v1.0.0/user/login', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Token': `${token}`,
+          'X-Access-OS': 'ANDROID',
+          'X-Access-Version': '1.0.0',
+        },
+        body: JSON.stringify({
+          username: email,
+          password: password,
+        }),
+      });
+  
+      const data = await response.json();
+      console.log('======data', data);
+  
+      if (response.ok) {
+        console.log('Login successful:', data);
+        if (rememberMe) {
+          await AsyncStorage.setItem('email', email);
+          await AsyncStorage.setItem('password', password);
+        } else {
+          await AsyncStorage.removeItem('email');
+          await AsyncStorage.removeItem('password');
+        }
+        await AsyncStorage.setItem('rememberMe', rememberMe ? 'true' : 'false');
+        navigation.navigate('Main', { screen: 'Home' });
+      } else {
+        Alert.alert('Login failed', 'Please check your credentials.');
+      }
+    } catch (error: any) {
+      console.error('Error logging in:', error);
+      Alert.alert('An error occurred', error.message);
+    }
+  };
+  
   const handleForgotPassword = () => {
-    console.log('Forgot password clicked');
     navigation.navigate('Forgot');
   };
 
@@ -137,6 +184,7 @@ const LoginScreen = () => {
         source={require('../assets/vector-2.png')}
       />
     </View>
+    
   );
 };
 

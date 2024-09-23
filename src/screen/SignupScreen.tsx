@@ -1,13 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getFirestore, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import Icon from 'react-native-vector-icons/Ionicons';
 import styles from '../styles/SignupStyles';
-import { auth } from '../utils/firebaseConfig';
 
 
 
@@ -16,25 +12,78 @@ const SignupScreen = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [mobile, setMobile] = useState('');
+  const [fullname, setFullname] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const navigation = useNavigation();
 
+
+  const getToken = async () => {
+    try {
+      const response = await fetch('http://covua.coi.vn/api/*/auth/get-token', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        return data.token;
+      } else {
+        console.error('Failed to get token');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
+  };
+  
   const handleSignup = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const token = await getToken();
+      if (!token) {
+        Alert.alert('Failed to get token');
+        return;
+      }
   
-      // Lưu thêm thông tin vào Firestore (nếu cần)
-      const db = getFirestore();
-      await setDoc(doc(db, 'users', user.uid), {
-        username,
-        email,
-        password,
-        mobile
+      // Validate password and confirm password
+      if (password !== passwordConfirm) {
+        Alert.alert('Passwords do not match', 'Please make sure both passwords are the same.');
+        return;
+      }
+  
+      const response = await fetch('http://covua.coi.vn/api/v1.0.0/user/register', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Token': `${token}`,
+          'X-Access-OS': 'ANDROID',
+          'X-Access-Version': '1.0.0'
+        },
+        body: JSON.stringify({
+          fullname: fullname,
+          username: username,
+          email: email,
+          password: password,  // Make sure the server hashes this properly
+          password_confirm: password, // Confirm password
+        }),
       });
   
-      navigation.navigate('Login'); // Chuyển hướng đến Login sau khi đăng ký
-    } catch (error) {
+      const data = await response.json();
+      console.log('Response data:', data);
+  
+      // Check if response status is successful
+      if (response.ok) {
+        console.log('Signup successful:', data);
+        Alert.alert('Signup successful', 'Your account has been created.');
+        navigation.navigate('Login'); // Navigate to login after success
+      } else {
+        Alert.alert('Signup failed', data.message || 'Please check your input.');
+      }
+    } catch (error: any) {
       console.error('Error signing up:', error);
+      Alert.alert('An error occurred', error.message);
     }
   };
 
@@ -48,6 +97,20 @@ const SignupScreen = () => {
         <Icon name="arrow-back-circle-outline" size={40} color="black" />
       </TouchableOpacity>
       <Text style={styles.createAccount}>Create account</Text>
+      
+      <View style={styles.inputContainer}>
+        <Image
+          style={styles.profileIcon}
+          resizeMode="cover"
+          source={require('../assets/profile.png')}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          value={fullname}
+          onChangeText={text => setFullname(text)}
+        />
+      </View>
       
       <View style={styles.inputContainer}>
         <Image
@@ -74,6 +137,22 @@ const SignupScreen = () => {
           placeholder="Password"
           value={password}
           onChangeText={text => setPassword(text)}
+          secureTextEntry
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Image
+          style={styles.vectorIcon}
+          resizeMode="cover"
+          source={require('../assets/vector2.png')}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          value={passwordConfirm}
+          onChangeText={text => setPasswordConfirm(text)} // Xử lý input cho password confirm
+          secureTextEntry
         />
       </View>
       
@@ -88,16 +167,6 @@ const SignupScreen = () => {
           placeholder="Email"
           value={email}
           onChangeText={text => setEmail(text)}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <AntDesign name="mobile1" size={24} style={styles.mobileIcon}/>
-        <TextInput
-          style={styles.input}
-          placeholder="Mobile"
-          value={mobile}
-          onChangeText={text => setMobile(text)}
         />
       </View>
       

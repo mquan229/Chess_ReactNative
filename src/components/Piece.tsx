@@ -9,9 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Vector } from "react-native-redash";
-import { saveMove } from "../utils/api";
 import { SIZE, toPosition, toTranslation } from "../utils/Notation";
-import PromotionPopup from "./PromotionPopup"; // Import thêm PromotionPopup
+import PromotionPopup from "./PromotionPopup";
 
 const styles = StyleSheet.create({
   piece: {
@@ -50,7 +49,15 @@ interface PieceProps {
   highlightMove: (from: Square, to: Square) => void;
 }
 
-const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onMove, highlightMove }
+const Piece = ({ 
+  id,
+  startPosition, 
+  chess, 
+  onTurn, 
+  enabled, 
+  setShowWinModal, 
+  onMove, 
+  highlightMove }
   : PieceProps) => {
   const isGestureActive = useSharedValue(false);
   const offsetX = useSharedValue(startPosition.x * SIZE);
@@ -60,44 +67,43 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onM
 
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [promotionMove, setPromotionMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [moveHistory, setMoveHistory] = useState<string[]>([]);
+
 
   const movePiece = useCallback(
     (to: Square) => {
       const moves = chess.moves({ verbose: true });
       const from = toPosition({ x: offsetX.value, y: offsetY.value });
       const move = moves.find((m) => m.from === from && m.to === to);
-      
-      // Kiểm tra nếu quân tốt cần thăng cấp
-      if (move && move.flags.includes("p")) {
-        setPromotionMove({ from, to });
-        setShowPromotionModal(true);
-      } else {
-        if (move) {
-          // Tóm gọn log
-          const { color, from, lan, piece, to } = move;
-          const playersMove = { color, from, lan, piece, to };
-          console.log('Players Move:', playersMove);
-          saveMove({ type: 'PlayerMove', details: playersMove });
-
-          chess.move({ from, to });
-          runOnJS(onTurn)();
-
-          // Highlight ô mới và ô cũ
-          highlightMove(from, to);
-          runOnJS(onTurn)();
-
-          // Kiểm tra nếu có checkmate
-          if (chess.isCheckmate()) {
-            setShowWinModal(true);
-            runOnJS(onTurn)();
-          }
+  
+      if (move) {
+        // Nếu di chuyển là thăng cấp, mở popup thăng cấp
+        if (move.promotion) {
+          setPromotionMove({ from, to });
+          setShowPromotionModal(true);
+          isGestureActive.value = false;
+          return;
         }
-        // Update animation
-        const { x, y } = toTranslation(move ? move.to : from);
+  
+        // Cập nhật lịch sử di chuyển
+        setMoveHistory(prevHistory => [...prevHistory, `${move.from}-${move.to}`]);
+  
+        // Di chuyển quân cờ
+        chess.move({ from, to });
+        runOnJS(onMove)(`${from}-${to}`);
+        runOnJS(onTurn)();
+        highlightMove(from, to);
+  
+        // Kiểm tra tình trạng chiếu tướng
+        if (chess.isCheckmate()) {
+          setShowWinModal(true);
+        }
+  
+        // Cập nhật animation
+        const { x, y } = toTranslation(move.to);
         translateX.value = withTiming(x, {}, () => (offsetX.value = x));
         translateY.value = withTiming(y, {}, () => (offsetY.value = y));
         isGestureActive.value = false;
-
       }
     },
     [chess, isGestureActive, offsetX, offsetY, translateX, translateY, onTurn, setShowWinModal, onMove]
@@ -106,14 +112,21 @@ const Piece = ({ id, startPosition, chess, onTurn, enabled, setShowWinModal, onM
   const handlePromotion = useCallback(
     (piece: string) => {
       if (promotionMove) {
+        // Thực hiện di chuyển thăng cấp
         chess.move({
           from: promotionMove.from,
           to: promotionMove.to,
           promotion: piece,
         });
+  
+        // Cập nhật lịch sử di chuyển
+        setMoveHistory(prevHistory => [...prevHistory, `${promotionMove.from}-${promotionMove.to}`]);
+  
+        // Đóng popup và xóa thông tin di chuyển
         setShowPromotionModal(false);
         setPromotionMove(null);
-        runOnJS(onTurn)();
+  
+        runOnJS(onTurn)(); // Thông báo cho component cha về lượt di chuyển
       }
     },
     [chess, promotionMove, onTurn]

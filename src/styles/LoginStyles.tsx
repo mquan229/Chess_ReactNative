@@ -96,6 +96,34 @@ const styles = StyleSheet.create({
     right: '80%',
   },
 
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  captchaImage: {
+    width: 200,
+    height: 70,
+    marginBottom: 15,
+  },
+  captchaInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    width: '80%',
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
  
 });
 
