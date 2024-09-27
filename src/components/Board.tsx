@@ -8,6 +8,7 @@ import { toPosition, toTranslation } from "../utils/Notation";
 import Arrow from "./Arrow";
 import { useMoveHistory } from "./MoveHistory";
 import Piece from "./Piece";
+import convertMoveToNotation from "./convertMoveToNotation";
 
 const { width } = Dimensions.get("window");
 const SIZE = width / 8;
@@ -61,15 +62,21 @@ const styles = StyleSheet.create({
     borderWidth :1,
     borderColor : "red"
   },
-  moveText: {
-    fontSize: 14,
-    padding: 10,
+  moveTextChild: {
+    fontSize : 20,
+    padding: '2%',
+    width : '50%', 
+    borderWidth :1,
+    borderColor : "red",
+    alignItems : 'center',
   },
   sectionHeader: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
-    padding: 10,
+    padding: 5,
     backgroundColor: "#f5f5f5",
+    borderWidth : 1,
+    borderColor : 'purple'
   },
   headerContainer: {
     flexDirection: "row",
@@ -102,6 +109,7 @@ interface Highlight {
 
 interface MoveItem {
   move: string;
+  fen: string;
   children?: MoveItem[];
 }
 
@@ -223,15 +231,21 @@ const Board = ({
     }
   }, [chess]);
 
-  const handleMove = (move: string) => {
-    console.log("Move:", move);
-    addMove(move);
-    onMove(move);
+  const handleMove = (move: any) => {
+    console.log("Handling move:", move);
+    if (typeof move === 'string') {
+      console.log("Move is already a string notation:", move);
+      addMove(move);
+      onMove(move);
+    } else {
+      const notationMove = convertMoveToNotation(move);
+      console.log("Converted move:", notationMove);
+      addMove(notationMove);
+      onMove(notationMove);
+    }
   };
-
   const handlePressHistoryItem = (index: number) => {
     handleBranchSelection(index); 
-    toggleExpand(index); 
   };
 
   // Prepare data for SectionList
@@ -325,18 +339,50 @@ const Board = ({
               </View>
             );
           }}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const sectionIndex = sectionData.findIndex(section => section.data.includes(item));
+          
+            // Kiểm tra nếu đây là nước đi đầu tiên trong cặp
+            const isEven = index % 2 === 0;
+          
+            // Nếu là nước đi đầu tiên trong cặp, thì lấy nước đi tiếp theo
+            const firstMove = isEven ? item : null;
+            const nextMove = isEven && index + 1 < sectionData[sectionIndex].data.length
+              ? sectionData[sectionIndex].data[index + 1]
+              : null;
+          
             return (
               <Collapsible collapsed={!expandedMoves.has(sectionIndex)}>
-                <TouchableOpacity 
-                  style={styles.moveText} 
-                  onPress={() => console.log("Pressed child move:", item.move)}>
-                  <Text>{item.move}</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {/* Nước đi đầu tiên (hiển thị nếu tồn tại) */}
+                  {firstMove && (
+                    <TouchableOpacity
+                      style={styles.moveTextChild}
+                      onPress={() => {
+                        console.log("Pressed move:", firstMove.move);
+                        undoToMove(firstMove.fen); // Quay lại trạng thái của nước cờ đầu tiên
+                      }}
+                    >
+                      <Text>{convertMoveToNotation(firstMove.move)}</Text>
+                    </TouchableOpacity>
+                  )}
+          
+                  {/* Nước đi thứ hai (nếu có và tồn tại) */}
+                  {nextMove && (
+                    <TouchableOpacity
+                      style={styles.moveTextChild}
+                      onPress={() => {
+                        console.log("Pressed move:", nextMove.move);
+                        undoToMove(nextMove.fen); // Quay lại trạng thái của nước cờ thứ hai
+                      }}
+                    >
+                      <Text>{convertMoveToNotation(nextMove.move)}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </Collapsible>
             );
-          }}
+          }}          
         />
       </SafeAreaView>
 

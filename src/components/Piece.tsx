@@ -11,6 +11,7 @@ import Animated, {
 import { Vector } from "react-native-redash";
 import { SIZE, toPosition, toTranslation } from "../utils/Notation";
 import PromotionPopup from "./PromotionPopup";
+import convertMoveToNotation from "./convertMoveToNotation";
 
 const styles = StyleSheet.create({
   piece: {
@@ -77,6 +78,7 @@ const Piece = ({
       const move = moves.find((m) => m.from === from && m.to === to);
   
       if (move) {
+        console.log("Move object: ", move); // Kiểm tra dữ liệu move
         // Nếu di chuyển là thăng cấp, mở popup thăng cấp
         if (move.promotion) {
           setPromotionMove({ from, to });
@@ -86,11 +88,14 @@ const Piece = ({
         }
   
         // Cập nhật lịch sử di chuyển
-        setMoveHistory(prevHistory => [...prevHistory, `${move.from}-${move.to}`]);
+        setMoveHistory(prevHistory => [
+          ...prevHistory, 
+          convertMoveToNotation(move) // Sử dụng hàm convertMoveToNotation
+        ]);
   
         // Di chuyển quân cờ
         chess.move({ from, to });
-        runOnJS(onMove)(`${from}-${to}`);
+        runOnJS(onMove)(convertMoveToNotation(move));
         runOnJS(onTurn)();
         highlightMove(from, to);
   
