@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Board from "../components/Board";
 import { useMoveHistory } from "../components/MoveHistory"; // Import useMoveHistory
 import { findBestMove } from "../utils/AI";
+import { saveMove } from "../utils/api";
 
 const AIGame = () => {
   const chess = useRef(new Chess()).current;
@@ -37,20 +38,29 @@ const AIGame = () => {
       setTimeout(() => {
         const aiMove = findBestMove(chess, 2);
         if (aiMove) {
-          const { lan } = aiMove;
+          const { color, from, lan, piece, to } = aiMove;
           console.log("Nước đi của AI: ", lan);
   
-          chess.move(aiMove); // Thực hiện nước đi của AI
-          addMove(lan); // Lưu nước đi của AI vào lịch sử giống như người chơi
+          // Highlight nước đi của AI trước khi cập nhật trạng thái
+          highlightMove(from, to);
+  
+          // Lưu nước đi AI vào API
+          saveMove({ type: 'AIMove', details: { color, from, lan, piece, to } });
+  
+          chess.move(aiMove);
+
+          // Lưu nước đi AI vào lịch sử
+          addMove(lan); // Gọi addMove để thêm nước đi AI vào lịch sử
   
           setState({
             player: "w",
             board: chess.board(),
           });
+  
         }
       }, 200);
     }
-  }, [state.player, chess, addMove]);
+  }, [state.player, chess, addMove, highlightMove]); // Đảm bảo highlightMove có trong dependencies
   
 
   const resetGame = useCallback(() => {
