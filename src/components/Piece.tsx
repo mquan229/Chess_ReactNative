@@ -103,11 +103,25 @@ const Piece = ({
         runOnJS(onTurn)();
         highlightMove(from, to);
   
-        // Kiểm tra tình trạng chiếu tướng
-        if (chess.isCheckmate()) {
-          setShowWinModal(true);
-        }
-  
+        // // Kiểm tra tình trạng sau khi thăng cấp
+        // if (chess.isCheckmate()) {
+        //   setShowWinModal(true); // Mở modal chiến thắng nếu chiếu tướng
+        // } else if (chess.inCheck()) {
+        //   const kingSquare = chess.board().flatMap((row, y) =>
+        //     row.map((piece, x) => {
+        //       if (piece?.type === "k" && piece.color === chess.turn()) {
+        //         return toPosition({ x: x * SIZE, y: y * SIZE });
+        //       }
+        //       return null;
+        //     })
+        //   ).find(Boolean) as Square | null;
+
+        //   const attackingMove = chess.history({ verbose: true }).slice(-1)[0];
+        //   if (kingSquare && attackingMove) {
+        //     highlightMove(attackingMove.to, kingSquare);
+        //   }
+        // }
+        
         // Cập nhật animation
         const { x, y } = toTranslation(move.to);
         translateX.value = withTiming(x, {}, () => (offsetX.value = x));
@@ -132,6 +146,27 @@ const Piece = ({
           const notationMove = convertMoveToNotation(move);
           addMove(notationMove); // Use addMove from useMoveHistory
           onMove(notationMove);
+          
+          // Kiểm tra chiếu tướng hoặc chiếu hết sau khi thăng cấp
+          if (chess.isCheckmate()) {
+            setShowWinModal(true); // Mở modal chiến thắng nếu chiếu hết
+          } else if (chess.inCheck()) {
+            const kingSquare = chess.board().flatMap((row, y) =>
+              row.map((piece, x) => {
+                if (piece?.type === "k" && piece.color === chess.turn()) {
+                  return toPosition({ x: x * SIZE, y: y * SIZE });
+                }
+                return null;
+              })
+            ).find(Boolean) as Square | null;
+  
+            const attackingMove = chess.history({ verbose: true }).slice(-1)[0];
+            if (kingSquare && attackingMove) {
+              highlightMove(attackingMove.to, kingSquare);
+            }
+          } else {
+            highlightMove(promotionMove.from, promotionMove.to);
+          }
         }
   
         // Cập nhật lịch sử di chuyển

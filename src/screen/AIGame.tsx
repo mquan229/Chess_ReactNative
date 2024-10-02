@@ -51,6 +51,7 @@ const AIGame = () => {
 
           // Lưu nước đi AI vào lịch sử
           addMove(lan); // Gọi addMove để thêm nước đi AI vào lịch sử
+          console.log("Lịch sử nước đi sau khi AI di chuyển:", history);
   
           setState({
             player: "w",
