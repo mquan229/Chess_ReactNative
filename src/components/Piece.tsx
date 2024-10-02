@@ -69,8 +69,12 @@ const Piece = ({
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [promotionMove, setPromotionMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
+  // Add move to history
+  const addMove = (notationMove: string) => {
+    setMoveHistory(prevHistory => [...prevHistory, notationMove]);
+  };
 
-
+  
   const movePiece = useCallback(
     (to: Square) => {
       const moves = chess.moves({ verbose: true });
@@ -90,7 +94,7 @@ const Piece = ({
         // Cập nhật lịch sử di chuyển
         setMoveHistory(prevHistory => [
           ...prevHistory, 
-          convertMoveToNotation(move) // Sử dụng hàm convertMoveToNotation
+          convertMoveToNotation(move) // Cập nhật bằng cách chuyển nước đi sang ký hiệu
         ]);
   
         // Di chuyển quân cờ
@@ -118,11 +122,17 @@ const Piece = ({
     (piece: string) => {
       if (promotionMove) {
         // Thực hiện di chuyển thăng cấp
-        chess.move({
+        const move = chess.move({
           from: promotionMove.from,
           to: promotionMove.to,
           promotion: piece,
         });
+        
+        if (move) {
+          const notationMove = convertMoveToNotation(move);
+          addMove(notationMove); // Use addMove from useMoveHistory
+          onMove(notationMove);
+        }
   
         // Cập nhật lịch sử di chuyển
         setMoveHistory(prevHistory => [...prevHistory, `${promotionMove.from}-${promotionMove.to}`]);
@@ -134,7 +144,7 @@ const Piece = ({
         runOnJS(onTurn)(); // Thông báo cho component cha về lượt di chuyển
       }
     },
-    [chess, promotionMove, onTurn]
+    [chess, promotionMove, onTurn, addMove , onMove]
   );
 
   const panGesture = Gesture.Pan()

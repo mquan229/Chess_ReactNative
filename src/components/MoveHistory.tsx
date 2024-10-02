@@ -59,15 +59,17 @@ const addChildMove = (parentIndex: number, move: any) => {
     const parentMove = newHistory[parentIndex];
 
     if (parentMove) {
-      // In ra thông tin của nước đi cha và nước đi con
       console.log("Parent Move:", parentMove);
       console.log("Move to add:", move);
 
-      // Chuyển đổi nước đi thành notation
-      const notationMove = typeof move === 'string' ? move : convertMoveToNotation(move);
-
-      // In ra notation để kiểm tra
-      console.log("Converted Move Notation:", notationMove);
+      let notationMove: string;
+      if (typeof move === 'string') {
+        console.log("Move is already a string notation:", move);
+        notationMove = move;
+      } else {
+        notationMove = convertMoveToNotation(move);
+        console.log("Converted Move Notation:", notationMove);
+      }
 
       if (parentMove.children) {
         parentMove.children.push({ move: notationMove, fen: chess.fen() });
@@ -75,11 +77,9 @@ const addChildMove = (parentIndex: number, move: any) => {
         parentMove.children = [{ move: notationMove, fen: chess.fen() }];
       }
 
-      // In ra parentMove sau khi thêm nước đi con
       console.log("Updated Parent Move:", parentMove);
     }
 
-    // In ra lịch sử mới để kiểm tra
     console.log("Updated History:", newHistory);
     return newHistory;
   });
