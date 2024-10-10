@@ -99,6 +99,8 @@ interface BoardProps {
   onTurnBack: () => void;
   resetHighlights: () => void;
   highlightMove: (from: Square, to: Square) => void;
+  highlightMoveAI?: (from: Square, to: Square) => void;  
+  setCheckArrowAI?: (from: Square, to: Square) => void;  
   mode?: string;
 }
 
@@ -138,6 +140,7 @@ const Board = ({
   const { history, setHistory, addMove, undoToMove,setCurrentBranchIndex,
      addChildMove, expandedMoves, toggleExpand, handleBranchSelection
      } = useMoveHistory(chess, onTurn);
+  const [sectionData, setSectionData] = useState<SectionMoveItem[]>([]);
 
   const handleCloseModal = () => {
     setShowWinModal(false);
@@ -204,6 +207,7 @@ const Board = ({
     }
 
     setHighlights(newHighlights);
+    setLastMove({ from, to });
   };
 
   useEffect(() => {
@@ -248,12 +252,22 @@ const Board = ({
     handleBranchSelection(index); 
   };
 
-  // Prepare data for SectionList
-  const sectionData: SectionMoveItem[] = history.map((moveItem, index) => ({
-    title: moveItem.move, 
-    data: moveItem.children || [],  
-    index, 
-  }));
+  // // Prepare data for SectionList
+  // const sectionData: SectionMoveItem[] = history.map((moveItem, index) => ({
+  //   title: moveItem.move, 
+  //   data: moveItem.children || [],  
+  //   index, 
+  // }));
+
+  useEffect(() => {
+    // Cập nhật sectionData khi history thay đổi
+    const newSectionData = history.map((moveItem, index) => ({
+      title: moveItem.move,
+      data: moveItem.children || [],
+      index,
+    }));
+    setSectionData(newSectionData);
+  }, [history]);
 
   return (
     <View style={styles.container}>
@@ -261,7 +275,7 @@ const Board = ({
       {lastMove && (
         <View
           style={[
-            styles.lastMove,
+            // styles.lastMove,
             { transform: [{ translateX: toTranslation(lastMove.from).x }, { translateY: toTranslation(lastMove.from).y }] },
           ]}
         />

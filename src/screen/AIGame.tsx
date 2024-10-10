@@ -1,9 +1,18 @@
 import { Chess, Square } from "chess.js";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View } from "react-native";
+import Arrow from "../components/Arrow"; // Import Arrow component
 import Board from "../components/Board";
-import { useMoveHistory } from "../components/MoveHistory"; // Import useMoveHistory
+import convertMoveToNotation from "../components/convertMoveToNotation";
+import { useMoveHistory } from "../components/MoveHistory";
 import { findBestMove } from "../utils/AI";
 import { saveMove } from "../utils/api";
+import { toTranslation } from "../utils/Notation";
+
+interface Highlight {
+  square: Square;
+  color: string;
+}
 
 const AIGame = () => {
   const chess = useRef(new Chess()).current;
@@ -13,6 +22,9 @@ const AIGame = () => {
   });
   const [showWinModal, setShowWinModal] = useState(false);
   const { addMove, history } = useMoveHistory(chess, () => onTurn());
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [arrowCoordinates, setArrowCoordinates] = useState<{ fromX: number; fromY: number; toX: number; toY: number } | null>(null);
 
   const onTurn = useCallback(() => {
     if (chess.isGameOver()) {
@@ -26,43 +38,66 @@ const AIGame = () => {
   }, [chess]);
 
   const resetHighlights = useCallback(() => {
-    // Clear highlights in the board (implementation depends on your logic)
+    setHighlights([]);
+    setLastMove(null);
+    setArrowCoordinates(null); // Reset arrow when resetting highlights
   }, []);
 
-  const highlightMove = useCallback((from: Square, to: Square) => {
-    // Implement move highlighting logic here if needed
-  }, []);
+  const highlightMoveAI = useCallback((from: Square, to: Square) => {
+    // Highlight chỉ áp dụng cho ô from và to, không hiển thị arrow
+    const newHighlights: Highlight[] = [
+      { square: from, color: "rgba(0, 255, 0, 0.15)" },
+      { square: to, color: "rgba(0, 255, 0, 0.8)" },
+    ];
+  
+    if (chess.inCheck()) {
+      const kingSquare = chess.board().flatMap((row, y) =>
+        row.map((piece, x) => {
+          if (piece?.type === "k" && piece.color === chess.turn()) {
+            return `${'abcdefgh'[x]}${8 - y}` as Square;
+          }
+          return null;
+        })
+      ).find(Boolean) as Square | null;
+  
+      if (kingSquare) {
+        newHighlights.push({ square: kingSquare, color: "rgba(255, 0, 0, 0.5)" });
+  
+        // Arrow coordinates - king being checked to checking piece
+        const fromCoords = { x: 'abcdefgh'.indexOf(to[0]), y: 8 - parseInt(to[1], 10) };  // Ô đến của quân chiếu
+        const toCoords = { x: 'abcdefgh'.indexOf(kingSquare[0]), y: 8 - parseInt(kingSquare[1], 10) };  // Ô của vua bị chiếu
+        setArrowCoordinates({
+          fromX: fromCoords.x * 50 + 25,
+          fromY: fromCoords.y * 50 + 25,
+          toX: toCoords.x * 50 + 25,
+          toY: toCoords.y * 50 + 25,
+        });
+      }
+    }
+  
+    setHighlights(newHighlights);
+    setLastMove({ from, to });
+  }, [chess]);
 
   useEffect(() => {
     if (state.player === "b" && !chess.isGameOver()) {
       setTimeout(() => {
         const aiMove = findBestMove(chess, 2);
         if (aiMove) {
-          const { color, from, lan, piece, to } = aiMove;
-          console.log("Nước đi của AI: ", lan);
-  
-          // Highlight nước đi của AI trước khi cập nhật trạng thái
-          highlightMove(from, to);
-  
-          // Lưu nước đi AI vào API
-          saveMove({ type: 'AIMove', details: { color, from, lan, piece, to } });
-  
+          const { from, to } = aiMove;
           chess.move(aiMove);
-
-          // Lưu nước đi AI vào lịch sử
-          addMove(lan); // Gọi addMove để thêm nước đi AI vào lịch sử
-          console.log("Lịch sử nước đi sau khi AI di chuyển:", history);
-  
+          const notationMove = convertMoveToNotation(aiMove);
           setState({
             player: "w",
             board: chess.board(),
           });
-  
+          addMove(notationMove);
+          highlightMoveAI(from, to); // Highlight move
+          saveMove({ type: 'AIMove', details: aiMove });
         }
-      }, 200);
+      });
     }
-  }, [state.player, chess, addMove, highlightMove]); // Đảm bảo highlightMove có trong dependencies
-  
+  }, [state.player, chess, addMove, highlightMoveAI]);
 
   const resetGame = useCallback(() => {
     chess.reset();
@@ -75,28 +110,74 @@ const AIGame = () => {
   }, [chess, resetHighlights]);
 
   const onTurnBack = useCallback(() => {
-    chess.undo(); // Undo AI move
-    chess.undo(); // Undo player move
+    chess.undo();
+    chess.undo();
     setState({
       player: "w",
       board: chess.board(),
     });
-  }, [chess]);
+    resetHighlights();
+  }, [chess, resetHighlights]);
 
   return (
-    <Board
-      board={state.board}
-      player={state.player}
-      onTurn={onTurn}
-      resetGame={resetGame}
-      showWinModal={showWinModal}
-      setShowWinModal={setShowWinModal}
-      chess={chess}
-      onTurnBack={onTurnBack}
-      resetHighlights={resetHighlights}
-      onMove={() => {}} 
-      highlightMove={highlightMove}
-    />
+    <>
+      <Board
+        board={state.board}
+        player={state.player}
+        onTurn={onTurn}
+        resetGame={resetGame}
+        showWinModal={showWinModal}
+        setShowWinModal={setShowWinModal}
+        chess={chess}
+        onTurnBack={onTurnBack}
+        resetHighlights={resetHighlights}
+        onMove={() => {}} 
+        highlights={highlights}
+        lastMove={lastMove}
+      />
+      {arrowCoordinates && (
+        <Arrow
+          fromX={arrowCoordinates.fromX}
+          fromY={arrowCoordinates.fromY}
+          toX={arrowCoordinates.toX}
+          toY={arrowCoordinates.toY}
+        />
+      )}
+      {lastMove && (
+        <View
+          style={[
+            {
+              position: "absolute",
+              width: 50, // Kích thước của một ô cờ (có thể điều chỉnh dựa vào kích thước board của bạn)
+              height: 50,
+              backgroundColor: "rgba(0, 255, 0, 0.3)", // Màu highlight cho lastMove
+              transform: [
+                { translateX: toTranslation(lastMove.from).x },
+                { translateY: toTranslation(lastMove.from).y },
+              ],
+            },
+          ]}
+        />
+      )}
+
+      {highlights.map((highlight) => (
+        <View
+          key={highlight.square}
+          style={[
+            {
+              position: "absolute",
+              width: 50, // Kích thước của ô cờ
+              height: 50,
+              backgroundColor: highlight.color, // Sử dụng màu sắc từ đối tượng highlight
+              transform: [
+                { translateX: toTranslation(highlight.square).x },
+                { translateY: toTranslation(highlight.square).y },
+              ],
+            },
+          ]}
+        />
+      ))}
+    </>
   );
 };
 

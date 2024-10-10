@@ -8,7 +8,7 @@ export const useMoveHistory = (chess: Chess, onTurn: () => void) => {
   const [currentBranchIndex, setCurrentBranchIndex] = useState<number>(-1);
 
   const addMove = useCallback((move: string | { move: string, fen: string }) => {
-    console.log("Adding move:", move);
+    // console.log("Adding move:", move);
     
     // Kiểm tra nếu move là một chuỗi và chuyển đổi thành đối tượng
     const moveObject = typeof move === 'string' ? { move, fen: chess.fen() } : move;
@@ -22,7 +22,7 @@ export const useMoveHistory = (chess: Chess, onTurn: () => void) => {
         children: [],
       };
   
-      console.log("Current branch index: ", currentBranchIndex);
+      // console.log("Current branch index: ", currentBranchIndex);
   
       if (currentBranchIndex === -1) {
         newHistory.push(newMove);
@@ -32,7 +32,7 @@ export const useMoveHistory = (chess: Chess, onTurn: () => void) => {
         parentMove.children.push(newMove);
       }
   
-      console.log("New history:", newHistory);
+      // console.log("New history:", newHistory);
       return newHistory;
     });
   }, [currentBranchIndex, chess]);
@@ -59,16 +59,16 @@ const addChildMove = (parentIndex: number, move: any) => {
     const parentMove = newHistory[parentIndex];
 
     if (parentMove) {
-      console.log("Parent Move:", parentMove);
-      console.log("Move to add:", move);
+      // console.log("Parent Move:", parentMove);
+      // console.log("Move to add:", move);
 
       let notationMove: string;
       if (typeof move === 'string') {
-        console.log("Move is already a string notation:", move);
+        // console.log("Move is already a string notation:", move);
         notationMove = move;
       } else {
         notationMove = convertMoveToNotation(move);
-        console.log("Converted Move Notation:", notationMove);
+        // console.log("Converted Move Notation:", notationMove);
       }
 
       if (parentMove.children) {
@@ -77,10 +77,10 @@ const addChildMove = (parentIndex: number, move: any) => {
         parentMove.children = [{ move: notationMove, fen: chess.fen() }];
       }
 
-      console.log("Updated Parent Move:", parentMove);
+      // console.log("Updated Parent Move:", parentMove);
     }
 
-    console.log("Updated History:", newHistory);
+    // console.log("Updated History:", newHistory);
     return newHistory;
   });
 };

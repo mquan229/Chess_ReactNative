@@ -15,10 +15,10 @@ const pieceSymbols: { [key: string]: string } = {
   };
   
   function convertMoveToNotation(move: any): string {
-    console.log("Converting move object:", JSON.stringify(move, null, 2));
+    // console.log("Converting move object:", JSON.stringify(move, null, 2));
     
     if (typeof move === 'string') {
-      console.log("Move is already a string notation:", move);
+      // console.log("Move is already a string notation:", move);
       return move;
     }
   
@@ -83,7 +83,7 @@ const pieceSymbols: { [key: string]: string } = {
       notation += '+';  // Chiếu tướng
     }
   
-    console.log("Final Notation: ", notation);  // Ghi log kết quả cuối cùng của nước đi
+    // console.log("Final Notation: ", notation);  // Ghi log kết quả cuối cùng của nước đi
     return notation;
   }
   
