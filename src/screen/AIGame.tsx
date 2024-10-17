@@ -79,6 +79,7 @@ const AIGame = () => {
     setLastMove({ from, to });
   }, [chess]);
 
+
   useEffect(() => {
     if (state.player === "b" && !chess.isGameOver()) {
       setTimeout(() => {
@@ -87,18 +88,24 @@ const AIGame = () => {
           const { from, to } = aiMove;
           chess.move(aiMove);
           const notationMove = convertMoveToNotation(aiMove);
+  
+          // Thêm nước đi của AI vào lịch sử
+          addMove(notationMove);  // Thêm nước đi của AI vào lịch sử sectionList
+          console.log ('==============AIMOVE',aiMove)
+
           setState({
             player: "w",
             board: chess.board(),
           });
-          addMove(notationMove);
           highlightMoveAI(from, to); // Highlight move
           saveMove({ type: 'AIMove', details: aiMove });
         }
-      });
+      });//them do tre vao neu can thiet
     }
   }, [state.player, chess, addMove, highlightMoveAI]);
-
+  
+  console.log ('History after adding AI move:',history)
+ 
   const resetGame = useCallback(() => {
     chess.reset();
     setState({
@@ -119,6 +126,7 @@ const AIGame = () => {
     resetHighlights();
   }, [chess, resetHighlights]);
 
+  
   return (
     <>
       <Board

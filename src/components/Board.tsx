@@ -117,7 +117,7 @@ interface MoveItem {
 
 interface SectionMoveItem {
   title: string;
-  data: MoveItem[];
+  data: MoveItem[]; 
   index: number;
 }
 
@@ -419,3 +419,4 @@ const Board = ({
 };
 
 export default Board;
+

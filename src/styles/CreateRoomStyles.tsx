@@ -1,46 +1,61 @@
+import { StyleSheet } from 'react-native';
 
-import { Dimensions, StyleSheet } from 'react-native';
-
-
-const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding : '5%',
-    margin : '10%',
-    borderRadius: 15,
-    shadowColor: '#000',
-    width : width * 0.8,
-    height : height * 0.8,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   closeButton: {
     position: 'absolute',
-    top: '1%',
-    right: '2%',
-    width: width * 0.08, 
-    height: width * 0.08, 
-    borderRadius: width * 0.04,
-    backgroundColor: '#f00',
-    alignItems :'center',
-    justifyContent:'center',
+    top: 10,
+    right: 10,
   },
   closeButtonText: {
-    color: '#fff',
+    fontSize: 20,
     fontWeight: 'bold',
-    fontSize : 15,
-
   },
-  modalText: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    width: '100%',
+    marginBottom: 16,
+  },
+  modeContainer: {
+    marginBottom: 16,
+    width: '100%',
+  },
+  label: {
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  modeText: {
+    fontSize: 16,
+    marginVertical: 4,
+  },
+  activeMode: {
+    fontWeight: 'bold',
+    color: 'blue',
+  },
+  createButton: {
+    backgroundColor: 'blue',
+    padding: 15,
+    borderRadius: 5,
+    width: '100%',
+  },
+  buttonText: {
+    color: '#fff',
     textAlign: 'center',
+    fontSize: 16,
   },
 });
 
