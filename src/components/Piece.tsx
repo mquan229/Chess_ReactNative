@@ -69,8 +69,12 @@ const Piece = ({
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [promotionMove, setPromotionMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
+  // Add move to history
+  const addMove = (notationMove: string) => {
+    setMoveHistory(prevHistory => [...prevHistory, notationMove]);
+  };
 
-
+  
   const movePiece = useCallback(
     (to: Square) => {
       const moves = chess.moves({ verbose: true });
@@ -90,20 +94,16 @@ const Piece = ({
         // Cập nhật lịch sử di chuyển
         setMoveHistory(prevHistory => [
           ...prevHistory, 
-          convertMoveToNotation(move) // Sử dụng hàm convertMoveToNotation
+          convertMoveToNotation(move) // Cập nhật bằng cách chuyển nước đi sang ký hiệu
         ]);
   
         // Di chuyển quân cờ
         chess.move({ from, to });
+        
         runOnJS(onMove)(convertMoveToNotation(move));
         runOnJS(onTurn)();
         highlightMove(from, to);
-  
-        // Kiểm tra tình trạng chiếu tướng
-        if (chess.isCheckmate()) {
-          setShowWinModal(true);
-        }
-  
+        
         // Cập nhật animation
         const { x, y } = toTranslation(move.to);
         translateX.value = withTiming(x, {}, () => (offsetX.value = x));
@@ -118,11 +118,38 @@ const Piece = ({
     (piece: string) => {
       if (promotionMove) {
         // Thực hiện di chuyển thăng cấp
-        chess.move({
+        const move = chess.move({
           from: promotionMove.from,
           to: promotionMove.to,
           promotion: piece,
         });
+        
+        if (move) {
+          const notationMove = convertMoveToNotation(move);
+          addMove(notationMove); // Use addMove from useMoveHistory
+          onMove(notationMove);
+          
+          // Kiểm tra chiếu tướng hoặc chiếu hết sau khi thăng cấp
+          if (chess.isCheckmate()) {
+            setShowWinModal(true); // Mở modal chiến thắng nếu chiếu hết
+          } else if (chess.inCheck()) {
+            const kingSquare = chess.board().flatMap((row, y) =>
+              row.map((piece, x) => {
+                if (piece?.type === "k" && piece.color === chess.turn()) {
+                  return toPosition({ x: x * SIZE, y: y * SIZE });
+                }
+                return null;
+              })
+            ).find(Boolean) as Square | null;
+  
+            const attackingMove = chess.history({ verbose: true }).slice(-1)[0];
+            if (kingSquare && attackingMove) {
+              highlightMove(attackingMove.to, kingSquare);
+            }
+          } else {
+            highlightMove(promotionMove.from, promotionMove.to);
+          }
+        }
   
         // Cập nhật lịch sử di chuyển
         setMoveHistory(prevHistory => [...prevHistory, `${promotionMove.from}-${promotionMove.to}`]);
@@ -134,7 +161,7 @@ const Piece = ({
         runOnJS(onTurn)(); // Thông báo cho component cha về lượt di chuyển
       }
     },
-    [chess, promotionMove, onTurn]
+    [chess, promotionMove, onTurn, addMove , onMove]
   );
 
   const panGesture = Gesture.Pan()
