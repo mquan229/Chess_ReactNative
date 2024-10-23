@@ -34,7 +34,7 @@ const HomeScreen = () => {
       title: 'Chơi trực tuyến',
       description: 'Kết bạn chơi với nhau ',
       image: require('../assets/chess/bk.png'),
-      link: 'Room', 
+      link: 'OnlineGame', 
     },
   ];
 
