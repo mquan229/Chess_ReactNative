@@ -40,7 +40,7 @@ const HomeScreen = () => {
 
   // Moved the renderItem function inside HomeScreen
   const renderItem = ({ item }: { item: ListItem }) => {
-    console.log('Item:', item);
+    // console.log('Item:', item);
     return (
       <TouchableOpacity style={styles.item} onPress={() => {
         if (item.link) {

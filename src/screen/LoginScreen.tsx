@@ -8,6 +8,7 @@ import BouncyCheckbox from "react-native-bouncy-checkbox";
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../navigators/navigation';
 import styles from '../styles/LoginStyles';
+import apiInstance from '../utils/apiConfig';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -37,25 +38,18 @@ const LoginScreen = () => {
   // Hàm gọi API get-token
   const getToken = async () => {
     try {
-      const response = await fetch('http://covua.coi.vn/api/*/auth/get-token', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        const currentTime = new Date().getTime();
-        const expireTime = currentTime + 15 * 24 * 60 * 60 * 1000; // Hết hạn sau 15 ngày trên client
-        await AsyncStorage.setItem('TOKEN_ACCESS', data.token);
-        await AsyncStorage.setItem('TOKEN_EXPIRE', expireTime.toString());
-        return data.token;
-      } else {
-        console.error('Failed to get token');
-        return null;
-      }
+      const response = await apiInstance.get('/*/auth/get-token'); // Thay thế '*' bằng version tương ứng
+      const data = response.data;
+  
+      const currentTime = new Date().getTime();
+      const expireTime = currentTime + 15 * 24 * 60 * 60 * 1000; // Hết hạn sau 15 ngày
+  
+      await AsyncStorage.setItem('TOKEN_ACCESS', data.token);
+      await AsyncStorage.setItem('TOKEN_EXPIRE', expireTime.toString());
+  
+      return data.token;
     } catch (error) {
-      console.error('Error getting token:', error);
+      console.error('Error getting token "500 Internal server error" : ', error);
       return null;
     }
   };
@@ -63,24 +57,22 @@ const LoginScreen = () => {
   // Hàm gọi API refresh-token
   const refreshToken = async (token) => {
     try {
-      const response = await fetch('http://covua.coi.vn/api/*/auth/refresh-token', {
-        method: 'POST',
+      const response = await apiInstance.post('/*/auth/refresh-token', null, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
       });
-      const data = await response.json();
-      if (response.ok) {
-        const currentTime = new Date().getTime();
-        const expireTime = currentTime + 15 * 24 * 60 * 60 * 1000; // Hết hạn sau 15 ngày trên client
-        await AsyncStorage.setItem('TOKEN_ACCESS', data.token);
-        await AsyncStorage.setItem('TOKEN_EXPIRE', expireTime.toString());
-        return data.token;
-      } else {
-        console.error('Failed to refresh token');
-        return null;
-      }
+      const data = response.data;
+  
+      const currentTime = new Date().getTime();
+      const expireTime = currentTime + 15 * 24 * 60 * 60 * 1000; // Hết hạn sau 15 ngày
+  
+      await AsyncStorage.setItem('TOKEN_ACCESS', data.token);
+      await AsyncStorage.setItem('TOKEN_EXPIRE', expireTime.toString());
+
+      console.log("Token after refresh:", data.token); // Log token sau khi refresh
+  
+      return data.token;
     } catch (error) {
       console.error('Error refreshing token:', error);
       return null;
@@ -92,14 +84,14 @@ const LoginScreen = () => {
     try {
       const token = await AsyncStorage.getItem('TOKEN_ACCESS');
       const expireTime = await AsyncStorage.getItem('TOKEN_EXPIRE');
-
+  
       if (!token || !expireTime) {
         console.log('Chưa có token, gọi API get-token mới');
         return await getToken();
       } else {
         const currentTime = new Date().getTime();
         const expireDate = parseInt(expireTime);
-
+  
         if (currentTime >= expireDate) {
           console.log('Token đã hết hạn, gọi API get-token mới');
           return await getToken();
@@ -115,7 +107,6 @@ const LoginScreen = () => {
             return refreshedToken;
           }
           console.log('Token vẫn còn hạn, tiếp tục sử dụng');
-          // console.log("====================token",token)
           return token;
         }
       }
@@ -130,7 +121,7 @@ const LoginScreen = () => {
       Alert.alert('Validation error', 'Email and password cannot be empty');
       return;
     }
-
+  
     try {
       // Lấy token
       const token = await checkToken();
@@ -138,24 +129,15 @@ const LoginScreen = () => {
         Alert.alert('Failed to get token');
         return;
       }
-
+  
       // Thực hiện yêu cầu đăng nhập
-      const response = await fetch('http://covua.coi.vn/api/v1.0.0/user/login', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Access-Token': `${token}`,
-          'X-Access-OS': 'ANDROID',
-          'X-Access-Version': '1.0.0',
-        },
-        body: JSON.stringify({
-          username: email,
-          password: password,
-        }),
+      const response = await apiInstance.put('/v1.0.0/user/login', {
+        username: email,
+        password: password,
       });
-
-      const data = await response.json();
-      if (response.ok) {
+  
+      const data = response.data;
+      if (response.status === 200) {
         console.log('Login successful:', data);
         if (rememberMe) {
           await AsyncStorage.setItem('email', email);
@@ -172,6 +154,7 @@ const LoginScreen = () => {
     } catch (error: any) {
       console.error('Error logging in:', error);
       Alert.alert('An error occurred', error.message);
+      
     }
   };
 
