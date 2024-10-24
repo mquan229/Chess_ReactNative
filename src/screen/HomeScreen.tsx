@@ -34,13 +34,13 @@ const HomeScreen = () => {
       title: 'Chơi trực tuyến',
       description: 'Kết bạn chơi với nhau ',
       image: require('../assets/chess/bk.png'),
-      link: 'Room', 
+      link: 'OnlineGame', 
     },
   ];
 
   // Moved the renderItem function inside HomeScreen
   const renderItem = ({ item }: { item: ListItem }) => {
-    console.log('Item:', item);
+    // console.log('Item:', item);
     return (
       <TouchableOpacity style={styles.item} onPress={() => {
         if (item.link) {
